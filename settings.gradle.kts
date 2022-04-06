@@ -30,7 +30,8 @@ rootProject.name = "network-parent"
 sequenceOf(
     "network-api",
     "network-message-api",
-    "network-message-rabbitmq"
+    "network-message-rabbitmq",
+    "network-document-api"
 ).forEach {
     include(it)
     project(":$it").projectDir = file(it)
