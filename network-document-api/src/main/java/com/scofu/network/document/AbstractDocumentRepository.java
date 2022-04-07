@@ -78,10 +78,10 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
     this.stateListeners = Lists.newArrayList();
     messageFlow.subscribeTo(DocumentUpdatedMessage.class)
         .withTopic("scofu.document.updated." + collection)
-        .via(this::handleUpdate);
+        .via(this::onDocumentUpdatedMessage);
     messageFlow.subscribeTo(DocumentDeletedMessage.class)
         .withTopic("scofu.document.deleted." + collection)
-        .via(this::handleDeletion);
+        .via(this::onDocumentDeletedMessage);
   }
 
   @Override
@@ -184,7 +184,7 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
     });
   }
 
-  private void handleUpdate(DocumentUpdatedMessage message) {
+  private void onDocumentUpdatedMessage(DocumentUpdatedMessage message) {
     if (!message.collection().equals(collection)) {
       return;
     }
@@ -200,7 +200,7 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
     stateListeners.forEach(stateListener -> stateListener.onUpdate(document, true));
   }
 
-  private void handleDeletion(DocumentDeletedMessage message) {
+  private void onDocumentDeletedMessage(DocumentDeletedMessage message) {
     if (!message.collection().equals(collection)) {
       return;
     }

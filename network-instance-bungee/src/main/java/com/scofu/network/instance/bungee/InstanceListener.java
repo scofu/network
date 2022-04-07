@@ -28,10 +28,10 @@ final class InstanceListener implements Feature {
         .withTopic("scofu.instance.lookup");
     messageFlow.subscribeTo(InstanceHelloMessage.class)
         .withTopic("scofu.instance.hello")
-        .via(this::handleHello);
+        .via(this::onInstanceHelloMessage);
     messageFlow.subscribeTo(InstanceGoodbyeMessage.class)
         .withTopic("scofu.instance.goodbye")
-        .via(this::handleGoodbye);
+        .via(this::onInstanceGoodbyeMessage);
     messageFlow.subscribeTo(InstanceNavigateRequest.class)
         .replyWith(InstanceNavigateReply.class)
         .withTopic("scofu.instance.navigate")
@@ -77,7 +77,7 @@ final class InstanceListener implements Feature {
     return future;
   }
 
-  private void handleHello(InstanceHelloMessage message) {
+  private void onInstanceHelloMessage(InstanceHelloMessage message) {
     proxyServer.getServers()
         .put(message.instance().id(),
             proxyServer.constructServerInfo(message.instance().id(), message.instance().address(),
@@ -86,7 +86,7 @@ final class InstanceListener implements Feature {
         "registered server: " + proxyServer.getServers().get(message.instance().id()));
   }
 
-  private void handleGoodbye(InstanceGoodbyeMessage message) {
+  private void onInstanceGoodbyeMessage(InstanceGoodbyeMessage message) {
     proxyServer.getServers().remove(message.instance().id());
   }
 }

@@ -52,11 +52,11 @@ final class LocalInstanceAnnouncer implements Feature {
     messageFlow.subscribeTo(InstanceStatusRequest.class)
         .replyWith(InstanceStatusReply.class)
         .withTopic("scofu.instance.status." + localHost.getHostName())
-        .via(this::handleStatus);
+        .via(this::onInstanceStatusRequest);
     messageFlow.subscribeTo(InstanceAvailabilityRequest.class)
         .replyWith(InstanceAvailabilityReply.class)
         .withTopic("scofu.instance.availability." + localHost.getHostName())
-        .via(this::handleAvailability);
+        .via(this::onInstanceAvailabilityRequest);
   }
 
   @Override
@@ -82,7 +82,8 @@ final class LocalInstanceAnnouncer implements Feature {
         new InetSocketAddress(localHost, 25565))));
   }
 
-  private CompletableFuture<InstanceStatusReply> handleStatus(InstanceStatusRequest request) {
+  private CompletableFuture<InstanceStatusReply> onInstanceStatusRequest(
+      InstanceStatusRequest request) {
     if (instanceFuture.isDone()) {
       return CompletableFuture.completedFuture(
           new InstanceStatusReply(instanceFuture.join(), localAvailability.get()));
@@ -92,7 +93,7 @@ final class LocalInstanceAnnouncer implements Feature {
 
   }
 
-  private CompletableFuture<InstanceAvailabilityReply> handleAvailability(
+  private CompletableFuture<InstanceAvailabilityReply> onInstanceAvailabilityRequest(
       InstanceAvailabilityRequest request) {
     final var event = new AvailabilityCheckEvent(request.context());
     plugin.getServer().getPluginManager().callEvent(event);

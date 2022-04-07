@@ -56,10 +56,10 @@ final class InstanceDeploymentController implements Feature {
     messageFlow.subscribeTo(InstanceDeployRequest.class)
         .replyWith(InstanceDeployReply.class)
         .withTopic("scofu.instance.deploy")
-        .via(this::handleDeployment);
+        .via(this::onInstanceDeployRequest);
     messageFlow.subscribeTo(InstanceHelloMessage.class)
         .withTopic("scofu.instance.hello")
-        .via(this::handleHello);
+        .via(this::onInstanceHelloMessage);
     this.environment = Lists.newArrayList(new EnvVarBuilder().withName("RABBITMQ_HOST")
         .withValue(System.getenv("RABBITMQ_HOST"))
         .build(), new EnvVarBuilder().withName("RABBITMQ_PORT")
@@ -177,7 +177,8 @@ final class InstanceDeploymentController implements Feature {
     }).start();
   }
 
-  private CompletableFuture<InstanceDeployReply> handleDeployment(InstanceDeployRequest request) {
+  private CompletableFuture<InstanceDeployReply> onInstanceDeployRequest(
+      InstanceDeployRequest request) {
     final var groupedKey = request.deployment().groupId() + request.deployment().name();
     if (pendingDeploymentsByGroupId.containsKey(groupedKey)) {
       return pendingDeploymentsByGroupId.get(groupedKey);
@@ -219,7 +220,7 @@ final class InstanceDeploymentController implements Feature {
     return future;
   }
 
-  private void handleHello(InstanceHelloMessage message) {
+  private void onInstanceHelloMessage(InstanceHelloMessage message) {
     Optional.ofNullable(pendingDeploymentsByUniqueId.remove(message.deploymentId()))
         .ifPresent(future -> {
           future.complete(new InstanceDeployReply(true, null, message.instance()));

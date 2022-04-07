@@ -39,17 +39,17 @@ final class InstanceAvailabilityController implements Feature {
     messageFlow.subscribeTo(InstanceAvailabilityRequest.class)
         .replyWith(InstanceAvailabilityReply.class)
         .withTopic("scofu.instance.availability")
-        .via(this::handleAvailability);
+        .via(this::onInstanceAvailabilityRequest);
     messageFlow.subscribeTo(InstanceGoodbyeMessage.class)
         .withTopic("scofu.instance.goodbye")
-        .via(this::handleGoodbye);
+        .via(this::onInstanceGoodbyeMessage);
     //    messageFlow.subscribeTo(InstanceStatusUpdateMessage.class)
     //        .withTopic("scofu.instance.status")
     //        .via(this::handleStatus);
     messageFlow.subscribeTo(InstanceLookupRequest.class)
         .replyWith(InstanceLookupReply.class)
         .withTopic("scofu.instance.lookup")
-        .via(this::handleLookup);
+        .via(this::onInstanceLookupRequest);
   }
 
   @Override
@@ -94,7 +94,8 @@ final class InstanceAvailabilityController implements Feature {
     }).start();
   }
 
-  private CompletableFuture<InstanceLookupReply> handleLookup(InstanceLookupRequest request) {
+  private CompletableFuture<InstanceLookupReply> onInstanceLookupRequest(
+      InstanceLookupRequest request) {
     return CompletableFuture.supplyAsync(() -> {
       try (var client = new DefaultKubernetesClient()) {
         return new InstanceLookupReply(client.pods()
@@ -114,7 +115,7 @@ final class InstanceAvailabilityController implements Feature {
     });
   }
 
-  private CompletableFuture<InstanceAvailabilityReply> handleAvailability(
+  private CompletableFuture<InstanceAvailabilityReply> onInstanceAvailabilityRequest(
       InstanceAvailabilityRequest request) {
     return CompletableFuture.supplyAsync(() -> {
       final var group = groupRepository.byId(request.groupId()).orElse(null);
@@ -149,7 +150,7 @@ final class InstanceAvailabilityController implements Feature {
     }).thenCompose(Function.identity());
   }
 
-  private void handleGoodbye(InstanceGoodbyeMessage message) {
+  private void onInstanceGoodbyeMessage(InstanceGoodbyeMessage message) {
     Optional.ofNullable(message.instance().deployment())
         .map(Deployment::groupId)
         .flatMap(groupRepository::byId)
