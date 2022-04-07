@@ -39,7 +39,8 @@ sequenceOf(
     "network-instance-bukkit",
     "network-instance-bungee",
     "network-instance-gateway",
-    "network-instance-discord"
+    "network-instance-discord",
+    "network-instance-service"
 ).forEach {
     include(it)
     project(":$it").projectDir = file(it)
