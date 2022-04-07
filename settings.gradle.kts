@@ -17,6 +17,8 @@ dependencyResolutionManagement {
         mavenCentral()
         gradlePluginPortal()
         maven("https://papermc.io/repo/repository/maven-public/")
+        maven("https://repo.spongepowered.org/maven")
+        maven("https://jitpack.io")
         maven {
             name = "scofu"
             url = uri("https://repo.scofu.com/repository/maven-snapshots")
@@ -35,7 +37,8 @@ sequenceOf(
     "network-document-service",
     "network-instance-api",
     "network-instance-bukkit",
-    "network-instance-bungee"
+    "network-instance-bungee",
+    "network-instance-gateway"
 ).forEach {
     include(it)
     project(":$it").projectDir = file(it)

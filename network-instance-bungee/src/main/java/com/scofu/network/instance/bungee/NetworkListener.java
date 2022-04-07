@@ -92,14 +92,14 @@ final class NetworkListener implements Listener, Feature {
 
   @EventHandler
   public void onServerKickEvent(ServerKickEvent event) {
-    if (event.getKickedFrom().getName().equals("limbo")) {
+    if (event.getKickedFrom().getName().equals("gateway")) {
       return;
     }
     if (event.getState() != State.CONNECTED) {
       return;
     }
     event.setCancelled(true);
-    //    event.setCancelServer(proxyServer.getServerInfo("limbo"));
+    //    event.setCancelServer(proxyServer.getServerInfo("gateway"));
     final var serverConnectEvent = new ServerConnectEvent(event.getPlayer(), null,
         Reason.JOIN_PROXY);
     onServerConnectEvent(serverConnectEvent);
@@ -147,7 +147,7 @@ final class NetworkListener implements Listener, Feature {
 
     if (event.getReason() == Reason.LOBBY_FALLBACK) {
       // TODO: make sure the failed request was to the default deployment instance
-      sendPlayerToWaitInLimboForDeployment(event, network, deployment);
+      sendPlayerThroughGatewayForDeployment(event, network, deployment);
       return;
     }
 
@@ -160,7 +160,7 @@ final class NetworkListener implements Listener, Feature {
     }
 
     if (reply.instance() == null) {
-      sendPlayerToWaitInLimboForDeployment(event, network, deployment);
+      sendPlayerThroughGatewayForDeployment(event, network, deployment);
       return;
     }
 
@@ -171,9 +171,9 @@ final class NetworkListener implements Listener, Feature {
     return hostString.replaceFirst("mc\\.", "");
   }
 
-  private void sendPlayerToWaitInLimboForDeployment(ServerConnectEvent event, Network network,
+  private void sendPlayerThroughGatewayForDeployment(ServerConnectEvent event, Network network,
       Deployment deployment) {
-    event.setTarget(proxyServer.getServerInfo("limbo"));
+    event.setTarget(proxyServer.getServerInfo("gateway"));
     deployQueue.push(new InstanceDeployRequest(network.id(), deployment))
         .whenComplete((deployReply, throwable) -> {
           if (throwable != null) {
