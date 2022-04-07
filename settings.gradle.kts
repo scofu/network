@@ -31,7 +31,9 @@ sequenceOf(
     "network-api",
     "network-message-api",
     "network-message-rabbitmq",
-    "network-document-api"
+    "network-document-api",
+    "network-document-service",
+    "network-instance-api"
 ).forEach {
     include(it)
     project(":$it").projectDir = file(it)
