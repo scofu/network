@@ -1,5 +1,7 @@
 package com.scofu.network.instance.bungee;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.network.instance.api.InstanceGoodbyeMessage;
@@ -55,13 +57,12 @@ final class InstanceListener implements Feature {
   private CompletableFuture<InstanceNavigateReply> handleNavigate(InstanceNavigateRequest request) {
     final var serverInfo = proxyServer.getServerInfo(request.instanceId());
     if (serverInfo == null) {
-      return CompletableFuture.completedFuture(new InstanceNavigateReply(false,
+      return completedFuture(new InstanceNavigateReply(false,
           "No instance registered with id " + request.instanceId() + "."));
     }
     final var player = proxyServer.getPlayer(request.id());
     if (player == null || !player.isConnected()) {
-      return CompletableFuture.completedFuture(
-          new InstanceNavigateReply(false, "Player not online."));
+      return completedFuture(new InstanceNavigateReply(false, "Player not online."));
     }
     final var future = new CompletableFuture<InstanceNavigateReply>();
     player.connect(serverInfo, (ok, throwable) -> {
