@@ -1,5 +1,9 @@
 package com.scofu.network.instance.service;
 
+import static java.util.concurrent.CompletableFuture.anyOf;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+
 import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.network.document.Query;
@@ -96,7 +100,7 @@ final class InstanceAvailabilityController implements Feature {
 
   private CompletableFuture<InstanceLookupReply> onInstanceLookupRequest(
       InstanceLookupRequest request) {
-    return CompletableFuture.supplyAsync(() -> {
+    return supplyAsync(() -> {
       try (var client = new DefaultKubernetesClient()) {
         return new InstanceLookupReply(client.pods()
             .inNamespace("default")
@@ -117,24 +121,23 @@ final class InstanceAvailabilityController implements Feature {
 
   private CompletableFuture<InstanceAvailabilityReply> onInstanceAvailabilityRequest(
       InstanceAvailabilityRequest request) {
-    return CompletableFuture.supplyAsync(() -> {
+    return supplyAsync(() -> {
       final var group = groupRepository.byId(request.groupId()).orElse(null);
 
       if (group == null) {
-        return CompletableFuture.completedFuture(
-            new InstanceAvailabilityReply(true, null, null, null));
+        return completedFuture(new InstanceAvailabilityReply(true, null, null, null));
       }
 
       final var future = new CompletableFuture<InstanceAvailabilityReply>();
-      CompletableFuture.anyOf(group.instancePlayerCountMap()
-              .keySet()
-              .stream()
-              .map(instanceId -> messageQueue.declareFor(InstanceAvailabilityRequest.class)
-                  .expectReply(InstanceAvailabilityReply.class)
-                  .withTopic("scofu.instance.availability." + instanceId)
-                  .push(request))
-              .toArray(CompletableFuture[]::new))
-          .thenApply(o -> o == null ? null : (InstanceAvailabilityReply) o)
+      anyOf(group.instancePlayerCountMap()
+          .keySet()
+          .stream()
+          .map(instanceId -> messageQueue.declareFor(InstanceAvailabilityRequest.class)
+              .expectReply(InstanceAvailabilityReply.class)
+              .withTopic("scofu.instance.availability." + instanceId)
+              .push(request))
+          .toArray(CompletableFuture[]::new)).thenApply(
+              o -> o == null ? null : (InstanceAvailabilityReply) o)
           .completeOnTimeout(null, 5, TimeUnit.SECONDS)
           .whenComplete((availabilityReply, throwable) -> {
             if (throwable != null) {

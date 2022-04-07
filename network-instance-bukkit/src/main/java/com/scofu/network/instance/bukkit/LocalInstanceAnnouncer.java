@@ -1,5 +1,7 @@
 package com.scofu.network.instance.bukkit;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.common.json.Json;
@@ -85,7 +87,7 @@ final class LocalInstanceAnnouncer implements Feature {
   private CompletableFuture<InstanceStatusReply> onInstanceStatusRequest(
       InstanceStatusRequest request) {
     if (instanceFuture.isDone()) {
-      return CompletableFuture.completedFuture(
+      return completedFuture(
           new InstanceStatusReply(instanceFuture.join(), localAvailability.get()));
     }
     return instanceFuture.thenApply(
@@ -98,12 +100,12 @@ final class LocalInstanceAnnouncer implements Feature {
     final var event = new AvailabilityCheckEvent(request.context());
     plugin.getServer().getPluginManager().callEvent(event);
     if (event.isCancelled()) {
-      return CompletableFuture.completedFuture(null);
+      return completedFuture(null);
     }
     final var deployment = json.fromString(Deployment.class, System.getenv("INSTANCE_DEPLOYMENT"));
     final var instance = new Instance(localHost.getHostName(), deployment,
         new InetSocketAddress(localHost, 25565));
-    return CompletableFuture.completedFuture(
+    return completedFuture(
         new InstanceAvailabilityReply(true, null, instance, localAvailability.get()));
   }
 }

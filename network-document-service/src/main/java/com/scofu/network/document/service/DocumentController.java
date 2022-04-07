@@ -1,5 +1,7 @@
 package com.scofu.network.document.service;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.mongodb.client.MongoDatabase;
@@ -82,13 +84,13 @@ final class DocumentController implements Feature {
       }
       matches.forEach((Consumer<? super Document>) document -> reply.put(document.getString("_id"),
           json.toString(Bson.class, document)));
-      return CompletableFuture.completedFuture(new DocumentQueryReply(true, null, reply));
+      return completedFuture(new DocumentQueryReply(true, null, reply));
     } catch (Throwable throwable) {
       throwable.printStackTrace();
       System.out.println("EROR");
       System.out.println(throwable);
       System.out.println(throwable.getCause());
-      return CompletableFuture.completedFuture(new DocumentQueryReply(false, "Error", Map.of()));
+      return completedFuture(new DocumentQueryReply(false, "Error", Map.of()));
     }
   }
 
@@ -97,7 +99,7 @@ final class DocumentController implements Feature {
     final var collection = mongoDatabase.getCollection(request.collection());
     final var count = request.query().filter() == null ? collection.countDocuments()
         : collection.countDocuments(new Document(request.query().filter().asMap()));
-    return CompletableFuture.completedFuture(new DocumentCountReply(true, null, count));
+    return completedFuture(new DocumentCountReply(true, null, count));
   }
 
   private CompletableFuture<DocumentUpdateReply> onDocumentUpdateRequest(
@@ -110,16 +112,16 @@ final class DocumentController implements Feature {
           new ReplaceOptions().upsert(true));
     } catch (Throwable throwable) {
       throwable.printStackTrace();
-      return CompletableFuture.completedFuture(new DocumentUpdateReply(false, "Error"));
+      return completedFuture(new DocumentUpdateReply(false, "Error"));
     }
     if (!result.wasAcknowledged()) {
-      return CompletableFuture.completedFuture(
+      return completedFuture(
           new DocumentUpdateReply(false, "Database did not acknowledge update."));
     }
     messageQueue.declareFor(DocumentUpdatedMessage.class)
         .withTopic("scofu.document.updated." + request.collection())
         .push(new DocumentUpdatedMessage(request.collection(), request.json()));
-    return CompletableFuture.completedFuture(new DocumentUpdateReply(true, null));
+    return completedFuture(new DocumentUpdateReply(true, null));
   }
 
   private CompletableFuture<DocumentDeleteReply> onDocumentDeleteRequest(
@@ -127,12 +129,12 @@ final class DocumentController implements Feature {
     final var collection = mongoDatabase.getCollection(request.collection());
     final var result = collection.deleteOne(Filters.eq("_id", request.id()));
     if (!result.wasAcknowledged()) {
-      return CompletableFuture.completedFuture(
+      return completedFuture(
           new DocumentDeleteReply(false, "Database did not acknowledge deletion."));
     }
     messageQueue.declareFor(DocumentDeletedMessage.class)
         .withTopic("scofu.document.deleted." + request.collection())
         .push(new DocumentDeletedMessage(request.collection(), request.id()));
-    return CompletableFuture.completedFuture(new DocumentDeleteReply(true, null));
+    return completedFuture(new DocumentDeleteReply(true, null));
   }
 }

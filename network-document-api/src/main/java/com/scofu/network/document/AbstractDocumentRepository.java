@@ -2,6 +2,7 @@ package com.scofu.network.document;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.scofu.network.document.Filter.where;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -106,7 +107,7 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   public CompletableFuture<Optional<D>> byIdAsync(String id) {
     checkNotNull(id, "id");
     if (cache.asMap().containsKey(id)) {
-      return CompletableFuture.completedFuture(Optional.of(cache.asMap().get(id)));
+      return completedFuture(Optional.of(cache.asMap().get(id)));
     }
     return findById(id).thenApplyAsync(optional -> optional.map(document -> {
       cache.put(id, document);

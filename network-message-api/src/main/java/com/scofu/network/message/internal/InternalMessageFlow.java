@@ -2,6 +2,8 @@ package com.scofu.network.message.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.scofu.common.json.DynamicReference.dynamic;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
@@ -59,11 +61,11 @@ final class InternalMessageFlow implements MessageFlow {
     final var isReplyToRequest = payload.message() == null;
     if (isReplyToRequest) {
       completeRequest(payload);
-      return CompletableFuture.completedFuture(null);
+      return completedFuture(null);
     }
     final var isMessageUnknown = payload.message().type() == null;
     if (isMessageUnknown) {
-      return CompletableFuture.completedFuture(null);
+      return completedFuture(null);
     }
     return resolveReplyThroughSubscription(payload);
   }
@@ -113,12 +115,12 @@ final class InternalMessageFlow implements MessageFlow {
     final var subscriptions = this.subscriptions.get(key);
     final var hasSubscription = subscriptions != null && !subscriptions.isEmpty();
     if (!hasSubscription) {
-      return CompletableFuture.completedFuture(null);
+      return completedFuture(null);
     }
     System.out.println("1key = " + key);
     System.out.println("1subscriptions = " + subscriptions.stream().toList());
 
-    return CompletableFuture.supplyAsync(() -> {
+    return supplyAsync(() -> {
       final var message = payload.message().value();
       for (var subscription : subscriptions) {
         final var reply = (byte[]) ((CompletableFuture) subscription.apply(message)).thenApply(

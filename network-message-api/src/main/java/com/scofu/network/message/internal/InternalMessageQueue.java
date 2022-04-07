@@ -2,6 +2,8 @@ package com.scofu.network.message.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.scofu.common.json.DynamicReference.dynamic;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
@@ -60,7 +62,7 @@ final class InternalMessageQueue implements MessageQueue {
   }
 
   private <T, R> CompletableFuture<R> declareFor(T t, Queue<T, R> queue) {
-    return CompletableFuture.supplyAsync(() -> {
+    return supplyAsync(() -> {
       final var expectsReply = !void.class.isAssignableFrom(queue.replyType().getRawType());
       if (expectsReply) {
         return dispatchPayloadAsRequest(t, queue);
@@ -85,7 +87,7 @@ final class InternalMessageQueue implements MessageQueue {
     dispatcher.dispatchRequest(queue.topic(), body);
     if (future.isDone()) {
       System.out.println("FUTURE WAS ALREADY COMPLETED LOL TOO FAST");
-      return CompletableFuture.completedFuture(future.join());
+      return completedFuture(future.join());
     }
     return future;
   }

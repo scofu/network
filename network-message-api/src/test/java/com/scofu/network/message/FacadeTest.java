@@ -1,5 +1,6 @@
 package com.scofu.network.message;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -54,7 +55,7 @@ public class FacadeTest extends Service {
      */
     @Subscribe
     default CompletableFuture<Ping> subscribe(Ping ping) {
-      return CompletableFuture.completedFuture(ping.withTag("hello"));
+      return completedFuture(ping.withTag("hello"));
     }
   }
 }
