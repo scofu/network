@@ -1,5 +1,7 @@
 package com.scofu.network.instance.gateway;
 
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 import static net.kyori.adventure.title.Title.Times.times;
 
 import java.time.Duration;
@@ -7,7 +9,6 @@ import java.util.Random;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.Sound.Source;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.TitlePart;
@@ -106,9 +107,9 @@ final class Parkour {
       nextPoint = generateNext(new Pos(0, 60, 0));
       nextNextPoint = generateNext(nextPoint);
       if (level > 0) {
-        player.sendMessage(Component.translatable("Du nådde nivå %s!",
-                Component.text(level).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD))
-            .color(NamedTextColor.WHITE));
+        player.sendMessage(translatable("Du nådde nivå %s!",
+            text(level).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD)).color(
+            NamedTextColor.WHITE));
       }
       level = 0;
       MinecraftServer.getSchedulerManager()
@@ -128,8 +129,7 @@ final class Parkour {
       player.clearTitle();
       player.sendTitlePart(TitlePart.TIMES,
           times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1)));
-      player.sendActionBar(
-          Component.text(level).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD));
+      player.sendActionBar(text(level).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD));
       sendBlockChanges(false);
       player.playSound(Sound.sound(Key.key("minecraft", "item.armor.equip_gold"), Source.MASTER, 2f,
           random.nextInt(10, 21) * 0.1f), nextNextPoint.x(), nextNextPoint.y(), nextNextPoint.z());

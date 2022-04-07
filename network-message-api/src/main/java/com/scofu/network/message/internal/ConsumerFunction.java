@@ -1,5 +1,7 @@
 package com.scofu.network.message.internal;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -14,6 +16,6 @@ interface ConsumerFunction<T, R> extends Consumer<T>, Function<T, CompletableFut
   @Override
   default CompletableFuture<R> apply(T t) {
     accept(t);
-    return CompletableFuture.completedFuture(null);
+    return completedFuture(null);
   }
 }
