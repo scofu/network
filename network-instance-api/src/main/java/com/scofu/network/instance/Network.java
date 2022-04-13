@@ -3,6 +3,7 @@ package com.scofu.network.instance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.jsoniter.annotation.JsonCreator;
+import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import com.scofu.common.json.PeriodEscapedString;
 import com.scofu.network.document.Document;
@@ -29,7 +30,7 @@ public class Network implements Document {
    * @param name        the name
    */
   @JsonCreator
-  public Network(String id, Map<String, Deployment> deployments,
+  public Network(@JsonProperty("_id") String id, Map<String, Deployment> deployments,
       Map<PeriodEscapedString, String> endpoints, String name) {
     this.id = id;
     this.deployments = deployments;
@@ -85,6 +86,7 @@ public class Network implements Document {
    *
    * @param name the name
    */
+  @JsonIgnore
   public void setName(String name) {
     checkNotNull(name, "name");
     this.name = name;
