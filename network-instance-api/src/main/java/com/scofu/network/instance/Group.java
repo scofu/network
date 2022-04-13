@@ -16,7 +16,7 @@ public class Group implements Document {
   private final Map<String, Integer> instancePlayerCountMap;
 
   @JsonCreator
-  public Group(String id) {
+  public Group(@JsonProperty("_id") String id) {
     this.id = id;
     this.instancePlayerCountMap = Maps.newLinkedHashMap();
   }
