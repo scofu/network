@@ -12,6 +12,9 @@ import com.scofu.common.json.PeriodEscapedString;
 import com.scofu.network.message.Dispatcher;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Basic network document test.
+ */
 public class TestDocumentService extends Service {
 
   @Inject
