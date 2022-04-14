@@ -33,7 +33,10 @@ import net.md_5.bungee.api.event.TabCompleteResponseEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
-final class NetworkListener implements Listener, Feature {
+/**
+ * Network listener.
+ */
+public final class NetworkListener implements Listener, Feature {
 
   private final NetworkRepository networkRepository;
   private final MessageQueue messageQueue;
@@ -55,29 +58,22 @@ final class NetworkListener implements Listener, Feature {
         .withTopic("scofu.instance.deploy");
   }
 
-  @EventHandler
-  public void onTabCompleteEvent(TabCompleteEvent event) {
-    System.out.println("Tab complete");
-    System.out.println(event.getCursor());
-    System.out.println(event.getSuggestions());
-    System.out.println(event.isCancelled());
-    System.out.println("-----");
-  }
-
-  @EventHandler
-  public void onTabCompleteResponseEvent(TabCompleteResponseEvent event) {
-    System.out.println("Tab response");
-    System.out.println(event.getSuggestions());
-    System.out.println(event.isCancelled());
-    System.out.println("-----");
-  }
-
+  /**
+   * Event.
+   *
+   * @param event the event
+   */
   @EventHandler
   public void onLoginEvent(LoginEvent event) {
     System.out.println("login domain: " + event.getConnection().getVirtualHost().getHostString());
     System.out.println("login domain: " + event.getConnection().getVirtualHost().getHostName());
   }
 
+  /**
+   * Event.
+   *
+   * @param event the event
+   */
   @EventHandler
   public void onPlayerHandshakeEvent(PlayerHandshakeEvent event) {
     System.out.println(
@@ -90,6 +86,11 @@ final class NetworkListener implements Listener, Feature {
             event.getHandshake().getPort()).getHostString());
   }
 
+  /**
+   * Event.
+   *
+   * @param event the event
+   */
   @EventHandler
   public void onServerKickEvent(ServerKickEvent event) {
     if (event.getKickedFrom().getName().equals("gateway")) {
@@ -106,7 +107,11 @@ final class NetworkListener implements Listener, Feature {
     event.setCancelServer(serverConnectEvent.getTarget());
   }
 
-
+  /**
+   * Event.
+   *
+   * @param event the event
+   */
   @EventHandler
   public void onServerConnectEvent(ServerConnectEvent event) {
     if (!event.getPlayer().getName().equals("Jezper")) {
@@ -193,6 +198,11 @@ final class NetworkListener implements Listener, Feature {
         });
   }
 
+  /**
+   * Event.
+   *
+   * @param event the event
+   */
   @EventHandler
   public void onProxyPingEvent(ProxyPingEvent event) {
     final var virtualHost = event.getConnection().getVirtualHost();

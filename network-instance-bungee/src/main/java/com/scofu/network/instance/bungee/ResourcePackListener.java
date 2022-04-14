@@ -15,7 +15,10 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 
-final class ResourcePackListener implements Listener, Feature {
+/**
+ * Resource Pack Listener.
+ */
+public final class ResourcePackListener implements Listener, Feature {
 
   private static final String URL =
       "https://download.mc-packs.net/pack/" + "03f954d1330fa3290c886b0f1c0860df77240f3b.zip";
@@ -34,6 +37,11 @@ final class ResourcePackListener implements Listener, Feature {
         ResourcePackSendPacket::new, 60);
   }
 
+  /**
+   * Event.
+   *
+   * @param event the event
+   */
   @EventHandler
   public void onServerConnectedEvent(ServerConnectedEvent event) {
     if (playersWithResourcePack.contains(event.getPlayer().getUniqueId())) {
@@ -51,6 +59,11 @@ final class ResourcePackListener implements Listener, Feature {
     }, 1, TimeUnit.SECONDS);
   }
 
+  /**
+   * Event.
+   *
+   * @param event the event
+   */
   @EventHandler
   public void onPlayerDisconnectEvent(PlayerDisconnectEvent event) {
     playersWithResourcePack.remove(event.getPlayer().getUniqueId());
