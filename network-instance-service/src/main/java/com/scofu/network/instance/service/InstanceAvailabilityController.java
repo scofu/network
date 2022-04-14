@@ -8,11 +8,13 @@ import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.network.document.Query;
 import com.scofu.network.instance.Deployment;
+import com.scofu.network.instance.Group;
 import com.scofu.network.instance.GroupRepository;
 import com.scofu.network.instance.Instance;
 import com.scofu.network.instance.api.InstanceAvailabilityReply;
 import com.scofu.network.instance.api.InstanceAvailabilityRequest;
 import com.scofu.network.instance.api.InstanceGoodbyeMessage;
+import com.scofu.network.instance.api.InstanceHelloMessage;
 import com.scofu.network.instance.api.InstanceLookupReply;
 import com.scofu.network.instance.api.InstanceLookupRequest;
 import com.scofu.network.message.MessageFlow;
@@ -47,6 +49,9 @@ final class InstanceAvailabilityController implements Feature {
     messageFlow.subscribeTo(InstanceGoodbyeMessage.class)
         .withTopic("scofu.instance.goodbye")
         .via(this::onInstanceGoodbyeMessage);
+    messageFlow.subscribeTo(InstanceHelloMessage.class)
+        .withTopic("scofu.instance.hello")
+        .via(this::onInstanceHelloMessage);
     //    messageFlow.subscribeTo(InstanceStatusUpdateMessage.class)
     //        .withTopic("scofu.instance.status")
     //        .via(this::handleStatus);
@@ -125,6 +130,7 @@ final class InstanceAvailabilityController implements Feature {
       final var group = groupRepository.byId(request.groupId()).orElse(null);
 
       if (group == null) {
+        System.out.println("GROUP IS NULL!");
         return completedFuture(new InstanceAvailabilityReply(true, null, null, null));
       }
 
@@ -160,6 +166,17 @@ final class InstanceAvailabilityController implements Feature {
         .ifPresent(group -> {
           group.instancePlayerCountMap().remove(message.instance().id());
           groupRepository.update(group);
+        });
+  }
+
+  private void onInstanceHelloMessage(InstanceHelloMessage message) {
+    Optional.ofNullable(message.instance().deployment())
+        .map(Deployment::groupId)
+        .ifPresent(groupId -> {
+          if (groupRepository.byId(groupId).isPresent()) {
+            return;
+          }
+          groupRepository.update(new Group(groupId));
         });
   }
 
