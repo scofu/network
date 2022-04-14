@@ -6,6 +6,8 @@ import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.common.json.Json;
 import com.scofu.network.instance.Deployment;
+import com.scofu.network.instance.Group;
+import com.scofu.network.instance.GroupRepository;
 import com.scofu.network.instance.Instance;
 import com.scofu.network.instance.api.InstanceAvailabilityReply;
 import com.scofu.network.instance.api.InstanceAvailabilityRequest;
@@ -27,6 +29,7 @@ import org.bukkit.plugin.Plugin;
 
 final class LocalInstanceAnnouncer implements Feature {
 
+  private final GroupRepository groupRepository;
   private final LocalAvailability localAvailability;
   private final Plugin plugin;
   private final QueueBuilder<InstanceHelloMessage, Void> helloQueue;
@@ -38,14 +41,15 @@ final class LocalInstanceAnnouncer implements Feature {
 
   @Inject
   LocalInstanceAnnouncer(MessageQueue messageQueue, MessageFlow messageFlow,
-      LocalAvailability localAvailability, Plugin plugin, Json json,
-      @Named("LocalHost") InetAddress localHost) {
+      GroupRepository groupRepository, LocalAvailability localAvailability, Plugin plugin,
+      Json json, @Named("LocalHost") InetAddress localHost) {
     this.helloQueue = messageQueue.declareFor(InstanceHelloMessage.class)
         .withTopic("scofu.instance.hello");
     this.goodbyeQueue = messageQueue.declareFor(InstanceGoodbyeMessage.class)
         .withTopic("scofu.instance.goodbye");
     this.statusQueue = messageQueue.declareFor(InstanceStatusUpdateMessage.class)
         .withTopic("scofu.instance.status");
+    this.groupRepository = groupRepository;
     this.localAvailability = localAvailability;
     this.plugin = plugin;
     this.instanceFuture = new CompletableFuture<>();
@@ -72,9 +76,14 @@ final class LocalInstanceAnnouncer implements Feature {
     final var deploymentId = UUID.fromString(deploymentIdString);
     final var instance = new Instance(localHost.getHostName(), deployment,
         new InetSocketAddress(localHost, 25565));
-    helloQueue.push(new InstanceHelloMessage(deploymentId, instance));
+    final var group = groupRepository.byId(deployment.groupId())
+        .orElseGet(() -> new Group(deployment.groupId()));
+    group.instancePlayerCountMap().put(instance.id(), 0);
+    groupRepository.update(group).thenAccept(x -> {
+      helloQueue.push(new InstanceHelloMessage(deploymentId, instance));
+      instanceFuture.complete(instance);
+    });
     //    statusQueue.push(new InstanceStatusUpdateMessage(instance, localAvailability.get()));
-    instanceFuture.complete(instance);
   }
 
   @Override

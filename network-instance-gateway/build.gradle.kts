@@ -11,7 +11,7 @@ dependencies {
     api(project(":network-instance-api"))
     implementation("com.scofu:app-bootstrap-api:1.0-SNAPSHOT")
     implementation("com.scofu:text-api:1.0-SNAPSHOT")
-    implementation("com.github.Minestom:Minestom:-SNAPSHOT")
+    implementation("com.github.Minestom:Minestom:821063addf")
     testImplementation("com.scofu:app-bootstrap-api:1.0-SNAPSHOT")
 }
 

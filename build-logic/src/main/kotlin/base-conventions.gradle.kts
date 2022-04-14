@@ -100,7 +100,7 @@ tasks {
                     duplicatesStrategy = DuplicatesStrategy.WARN
 
                     val firstLevelDependencies =
-                        configurations.compileClasspath.get().resolvedConfiguration.firstLevelModuleDependencies
+                        configurations.runtimeClasspath.get().resolvedConfiguration.firstLevelModuleDependencies
                             .filter { !it.module.id.group.startsWith("com.scofu") }
                             .flatMap { it.allModuleArtifacts }
                             .map { it.file.name }
@@ -111,6 +111,8 @@ tasks {
                         .filter { !exclusions.contains(it.name) }
                         .filter { firstLevelDependencies.contains(it.name) }
                         .map { if (it.isDirectory) it else if (it.exists()) zipTree(it) else it }
+
+                    println("${project.name}-fcp: ${filteredClasspath}")
 
                     from(filteredClasspath)
                 }
