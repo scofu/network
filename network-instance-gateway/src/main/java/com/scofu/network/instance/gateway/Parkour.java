@@ -2,7 +2,6 @@ package com.scofu.network.instance.gateway;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
-import static net.kyori.adventure.title.Title.Times.times;
 
 import java.time.Duration;
 import java.util.Random;
@@ -11,6 +10,7 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.Sound.Source;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
@@ -128,7 +128,7 @@ final class Parkour {
       level++;
       player.clearTitle();
       player.sendTitlePart(TitlePart.TIMES,
-          times(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1)));
+          Title.Times.of(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1)));
       player.sendActionBar(text(level).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD));
       sendBlockChanges(false);
       player.playSound(Sound.sound(Key.key("minecraft", "item.armor.equip_gold"), Source.MASTER, 2f,
