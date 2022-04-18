@@ -1,5 +1,5 @@
 plugins {
-    id("base-conventions")
+    id("com.scofu.common-build.base") version "1.0-SNAPSHOT"
 }
 
 dependencies {

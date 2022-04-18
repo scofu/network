@@ -1,5 +1,5 @@
 plugins {
-    id("bungee-conventions")
+    id("com.scofu.common-build.bungee") version "1.0-SNAPSHOT"
 }
 
 dependencies {
