@@ -34,6 +34,13 @@ tasks {
         group = "Publishing"
         description = "Publishes the re-obfuscated jar in a *hacky* way."
         doFirst {
+            publishing {
+                publications {
+                    named<MavenPublication>("mavenJava") {
+                        artifactId = artifactId + "-reobf"
+                    }
+                }
+            }
             project.tasks.named<Jar>("jar") {
                 archiveClassifier.set("")
                 from(reobfJar)
