@@ -21,8 +21,8 @@ import net.md_5.bungee.event.EventHandler;
 public final class ResourcePackListener implements Listener, Feature {
 
   private static final String URL =
-      "https://download.mc-packs.net/pack/" + "03f954d1330fa3290c886b0f1c0860df77240f3b.zip";
-  private static final String HASH = "03f954d1330fa3290c886b0f1c0860df77240f3b";
+      "https://repo.scofu.com/" + "repository/assets/resourcepacks/scofu.zip";
+  private static final String HASH = "63b0f8475cf73a58497936852b95bcf1e09126f0";
 
   private final ProxyServer proxyServer;
   private final Plugin plugin;
