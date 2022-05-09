@@ -103,7 +103,6 @@ public class NetworkInstanceGateway extends Service {
 
     eventHandler.addListener(PlayerLoginEvent.class, event -> {
       event.setSpawningInstance(instanceContainer);
-      event.getPlayer().setRespawnPoint(new Pos(0.5, 61, 0.5));
       System.out.println("we got to here");
     });
 
@@ -128,7 +127,7 @@ public class NetworkInstanceGateway extends Service {
       player.sendMessage(
           text("Vänta ett ögonblick, en server distribueras åt dig.").color(NamedTextColor.GRAY));
       games.put(player.getUsername(), new Parkour(player, ThreadLocalRandom.current()));
-
+      player.teleport(new Pos(0.5, 61, 0.5));
       player.setLevel(-999);
 
       final var task = MinecraftServer.getSchedulerManager().buildTask(() -> {
@@ -150,15 +149,10 @@ public class NetworkInstanceGateway extends Service {
 
     minecraftServer.start("0.0.0.0", 25565);
 
-    instanceContainer.loadChunk(0, 0).whenComplete((chunk, throwable) -> {
-      if (throwable != null) {
-        throwable.printStackTrace();
-        return;
-      }
-      instanceContainer.setTime(18000);
-      instanceContainer.setTimeRate(0);
-      instanceContainer.setBlock(0, 60, 0, Block.BEACON);
-    });
+    instanceContainer.enableAutoChunkLoad(true);
+    instanceContainer.setTime(18000);
+    instanceContainer.setTimeRate(0);
+    instanceContainer.setBlock(0, 60, 0, Block.BEACON);
 
     // Initialization
     //    MinecraftServer minecraftServer = MinecraftServer.init();
