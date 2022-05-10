@@ -4,6 +4,7 @@ import static com.scofu.text.Components.centerWithSpaces;
 import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.lazy.LazyFactory;
+import com.scofu.text.Characters;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Optional;
@@ -42,8 +43,10 @@ final class TestDynamicEndpointResolver implements EndpointResolver {
       return CompletableFuture.completedFuture(Optional.empty());
     }
     final var target = domain.split("\\.dynamic\\.scofu\\.com", 2)[0];
-    final var top = centerWithSpaces(text("Scofu Network"), Locale.US, 240);
-    final var bottom = centerWithSpaces(text("dynamic -> " + target), Locale.US, 240);
+    final var top = centerWithSpaces(text("Scofu Network"), Locale.US, Characters.MOTD_WIDTH);
+    final var bottom = centerWithSpaces(text("dynamic -> " + target),
+        Locale.US,
+        Characters.MOTD_WIDTH);
     return CompletableFuture.completedFuture(Optional.of(lazyFactory.create(Motd.class,
         Motd::top,
         top,
