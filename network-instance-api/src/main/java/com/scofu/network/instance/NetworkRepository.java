@@ -17,9 +17,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Network repository.
+ * Instance repository.
  */
 public class NetworkRepository extends AbstractDocumentRepository<Network> {
+
+  private final MessageQueue messageQueue;
 
   @Inject
   NetworkRepository(MessageQueue messageQueue, MessageFlow messageFlow, Json json) {
@@ -27,6 +29,7 @@ public class NetworkRepository extends AbstractDocumentRepository<Network> {
         .withCollection("scofu.networks")
         .withCacheBuilder(CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.HOURS))
         .build());
+    this.messageQueue = messageQueue;
   }
 
   /**
@@ -36,7 +39,7 @@ public class NetworkRepository extends AbstractDocumentRepository<Network> {
    */
   public CompletableFuture<Optional<Network>> findByDomain(String domain) {
     return find(Query.builder()
-        .filter(where("endpoints." + Periods.escape(domain), exists(true)))
+        .filter(where("deployments." + Periods.escape(domain), exists(true)))
         .limitTo(1)
         .build()).thenApply(map -> map.values().stream().findFirst());
   }

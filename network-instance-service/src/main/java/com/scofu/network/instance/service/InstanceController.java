@@ -4,17 +4,15 @@ import static java.util.function.Predicate.not;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.common.json.Json;
+import com.scofu.network.document.Query;
 import com.scofu.network.instance.Deployment;
-import com.scofu.network.instance.Instance;
+import com.scofu.network.instance.InstanceRepository;
+import com.scofu.network.instance.api.InstanceCreatedMessage;
 import com.scofu.network.instance.api.InstanceDeployReply;
 import com.scofu.network.instance.api.InstanceDeployRequest;
-import com.scofu.network.instance.api.InstanceGoodbyeMessage;
-import com.scofu.network.instance.api.InstanceHelloMessage;
 import com.scofu.network.message.MessageFlow;
-import com.scofu.network.message.MessageQueue;
 import io.fabric8.kubernetes.api.model.ContainerState;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -32,50 +30,48 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
 
-final class InstanceDeploymentController implements Feature {
+final class InstanceController implements Feature {
 
-  private final Map<UUID, CompletableFuture<InstanceDeployReply>> pendingDeploymentsByUniqueId;
-  private final Map<String, CompletableFuture<InstanceDeployReply>> pendingDeploymentsByGroupId;
   private final ConcurrentKubernetesClient concurrentClient;
+  private final InstanceRepository instanceRepository;
   private final Json json;
   private final List<EnvVar> environment;
-  private final Pod pod;
+  private final Pod templatePod;
+  private final Map<String, CompletableFuture<InstanceDeployReply>> pendingDeployments;
 
   @Inject
-  InstanceDeploymentController(MessageQueue messageQueue, MessageFlow messageFlow, Json json) {
-    this.json = json;
-    this.pendingDeploymentsByUniqueId = Maps.newConcurrentMap();
-    this.pendingDeploymentsByGroupId = Maps.newConcurrentMap();
+  InstanceController(MessageFlow messageFlow, InstanceRepository instanceRepository, Json json) {
     this.concurrentClient = ConcurrentKubernetesClient.of();
-    messageFlow.subscribeTo(InstanceDeployRequest.class)
-        .replyWith(InstanceDeployReply.class)
-        .withTopic("scofu.instance.deploy")
-        .via(this::onInstanceDeployRequest);
-    messageFlow.subscribeTo(InstanceHelloMessage.class)
-        .withTopic("scofu.instance.hello")
-        .via(this::onInstanceHelloMessage);
+    this.instanceRepository = instanceRepository;
+    this.json = json;
     this.environment = Lists.newArrayList(new EnvVarBuilder().withName("RABBITMQ_HOST")
-        .withValue(System.getenv("RABBITMQ_HOST"))
-        .build(), new EnvVarBuilder().withName("RABBITMQ_PORT")
-        .withValue(System.getenv("RABBITMQ_PORT"))
-        .build(), new EnvVarBuilder().withName("RABBITMQ_USERNAME")
-        .withValue(System.getenv("RABBITMQ_USERNAME"))
-        .build(), new EnvVarBuilder().withName("RABBITMQ_PASSWORD")
-        .withValue(System.getenv("RABBITMQ_PASSWORD"))
-        .build(), new EnvVarBuilder().withName("RABBITMQ_EXCHANGE")
-        .withValue(System.getenv("RABBITMQ_EXCHANGE"))
-        .build(), new EnvVarBuilder().withName("NEXUS_USERNAME")
-        .withValue(System.getenv("NEXUS_USERNAME"))
-        .build(), new EnvVarBuilder().withName("NEXUS_PASSWORD")
-        .withValue(System.getenv("NEXUS_PASSWORD"))
-        .build());
-    this.pod = new PodBuilder().withNewMetadata()
+            .withValue(System.getenv("RABBITMQ_HOST"))
+            .build(),
+        new EnvVarBuilder().withName("RABBITMQ_PORT")
+            .withValue(System.getenv("RABBITMQ_PORT"))
+            .build(),
+        new EnvVarBuilder().withName("RABBITMQ_USERNAME")
+            .withValue(System.getenv("RABBITMQ_USERNAME"))
+            .build(),
+        new EnvVarBuilder().withName("RABBITMQ_PASSWORD")
+            .withValue(System.getenv("RABBITMQ_PASSWORD"))
+            .build(),
+        new EnvVarBuilder().withName("RABBITMQ_EXCHANGE")
+            .withValue(System.getenv("RABBITMQ_EXCHANGE"))
+            .build(),
+        new EnvVarBuilder().withName("NEXUS_USERNAME")
+            .withValue(System.getenv("NEXUS_USERNAME"))
+            .build(),
+        new EnvVarBuilder().withName("NEXUS_PASSWORD")
+            .withValue(System.getenv("NEXUS_PASSWORD"))
+            .build());
+    this.templatePod = new PodBuilder().withNewMetadata()
         .withNamespace("default")
         .withLabels(Map.of("app", "minecraft"))
         .endMetadata()
@@ -88,21 +84,35 @@ final class InstanceDeploymentController implements Feature {
         .withRestartPolicy("Never")
         .endSpec()
         .build();
+    this.pendingDeployments = Maps.newConcurrentMap();
+    messageFlow.subscribeTo(InstanceDeployRequest.class)
+        .replyWith(InstanceDeployReply.class)
+        .withTopic("scofu.instance")
+        .via(this::onInstanceDeployRequest);
+    messageFlow.subscribeTo(InstanceCreatedMessage.class)
+        .withTopic("scofu.instance")
+        .via(this::onInstanceAliveMessage);
+  }
 
-    final var goodbyeQueue = messageQueue.declareFor(InstanceGoodbyeMessage.class)
-        .withTopic("scofu.instance.goodbye");
-
+  @Override
+  public void enable() {
     new Thread(() -> {
       try (var client = new DefaultKubernetesClient()) {
-        client.pods()
+        final var pods = client.pods()
             .inNamespace("default")
             .withLabel("app", "minecraft")
             .list()
             .getItems()
             .stream()
-            .forEach(pod -> {
-              System.out.println("yup");
-            });
+            .map(pod -> pod.getMetadata().getName())
+            .toList();
+        instanceRepository.find(Query.empty()).thenAcceptAsync(instances -> {
+          instances.values().forEach(instance -> {
+            if (!pods.contains(instance.id())) {
+              instanceRepository.delete(instance.id());
+            }
+          });
+        });
 
         client.pods()
             .inNamespace("default")
@@ -133,8 +143,7 @@ final class InstanceDeploymentController implements Feature {
                           if (reason.equals("Completed")) {
                             client.pods().delete(resource);
                             final var instanceId = resource.getMetadata().getName();
-                            goodbyeQueue.push(
-                                new InstanceGoodbyeMessage(new Instance(instanceId, null, null)));
+                            instanceRepository.delete(instanceId);
                           }
                         });
                   }
@@ -149,22 +158,19 @@ final class InstanceDeploymentController implements Feature {
                         .map(ObjectMeta::getName)
                         .ifPresent(instanceId -> {
                           System.out.println("removing instance " + instanceId);
-                          goodbyeQueue.push(
-                              new InstanceGoodbyeMessage(new Instance(instanceId, null, null)));
+                          instanceRepository.delete(instanceId);
                         });
                   }
 
                   default -> {
                   }
                 }
-
               }
 
               @Override
-              public void onClose(WatcherException cause) {
-
-              }
+              public void onClose(WatcherException cause) {}
             });
+
         while (!Thread.currentThread().isInterrupted()) {
           try {
             TimeUnit.SECONDS.sleep(1);
@@ -179,21 +185,16 @@ final class InstanceDeploymentController implements Feature {
 
   private CompletableFuture<InstanceDeployReply> onInstanceDeployRequest(
       InstanceDeployRequest request) {
-    final var groupedKey = request.deployment().groupId() + request.deployment().name();
-    if (pendingDeploymentsByGroupId.containsKey(groupedKey)) {
-      return pendingDeploymentsByGroupId.get(groupedKey);
+    final var pendingDeployment = pendingDeployments.get(request.deployment().id());
+    if (pendingDeployment != null) {
+      return pendingDeployment;
     }
     final var future = new CompletableFuture<InstanceDeployReply>();
-    final var deploymentId = UUID.randomUUID();
-    pendingDeploymentsByUniqueId.put(deploymentId, future);
-    pendingDeploymentsByGroupId.put(groupedKey, future);
+    pendingDeployments.put(request.deployment().id(), future);
     concurrentClient.accept(client -> {
-      final var environment = Lists.newArrayList(
-          new EnvVarBuilder().withName("INSTANCE_DEPLOYMENT_ID")
-              .withValue(deploymentId.toString())
-              .build(), new EnvVarBuilder().withName("INSTANCE_DEPLOYMENT")
-              .withValue(json.toString(Deployment.class, request.deployment()))
-              .build());
+      final var environment = Lists.newArrayList(new EnvVarBuilder().withName("INSTANCE_DEPLOYMENT")
+          .withValue(json.toString(Deployment.class, request.deployment()))
+          .build());
       environment.addAll(this.environment);
       Optional.ofNullable(request.deployment().environment())
           .filter(not(Map::isEmpty))
@@ -204,7 +205,7 @@ final class InstanceDeploymentController implements Feature {
               .withValue(entry.getValue())
               .build())
           .collect(Collectors.toCollection(() -> environment));
-      final var pod = new PodBuilder(this.pod).editMetadata()
+      final var pod = new PodBuilder(templatePod).editMetadata()
           .withGenerateName(String.format("%s-", request.deployment().name()))
           .endMetadata()
           .editSpec()
@@ -216,16 +217,14 @@ final class InstanceDeploymentController implements Feature {
           .build();
       client.pods().inNamespace("default").create(pod);
     });
-
     return future;
   }
 
-  private void onInstanceHelloMessage(InstanceHelloMessage message) {
-    Optional.ofNullable(pendingDeploymentsByUniqueId.remove(message.deploymentId()))
-        .ifPresent(future -> {
-          future.complete(new InstanceDeployReply(true, null, message.instance()));
-          pendingDeploymentsByGroupId.remove(
-              message.instance().deployment().groupId() + message.instance().deployment().name());
-        });
+  private void onInstanceAliveMessage(InstanceCreatedMessage message) {
+    Optional.ofNullable(pendingDeployments.get(message.instance().deployment().id()))
+        .ifPresent(future -> future.complete(new InstanceDeployReply(true,
+            null,
+            message.instance())));
   }
+
 }

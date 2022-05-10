@@ -1,24 +1,26 @@
 package com.scofu.network.instance;
 
+import com.scofu.common.json.lazy.Lazy;
+import com.scofu.network.document.Document;
 import java.net.InetSocketAddress;
-import java.util.Objects;
 
 /**
- * Represents an instance.
- *
- * @param id         the id
- * @param deployment the deployment
- * @param address    the address
+ * An instance.
  */
-public record Instance(String id, Deployment deployment, InetSocketAddress address) {
+public interface Instance extends Lazy, Document {
 
-  @Override
-  public boolean equals(Object o) {
-    return this == o || o instanceof Instance instance && id.equals(instance.id);
-  }
+  Deployment deployment();
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(id);
-  }
+  InetSocketAddress address();
+
+  void setAddress(InetSocketAddress address);
+
+  int playerCount();
+
+  int incrementPlayerCount();
+
+  int decrementPlayerCount();
+
+  void setPlayerCount(int playerCount);
+
 }

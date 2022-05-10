@@ -17,7 +17,6 @@ public class NetworkInstanceService extends Service {
   @Override
   protected void configure() {
     install(new BootstrapModule(getClass().getClassLoader()));
-    bindFeature(InstanceDeploymentController.class).in(Scopes.SINGLETON);
-    bindFeature(InstanceAvailabilityController.class).in(Scopes.SINGLETON);
+    bindFeature(InstanceController.class).in(Scopes.SINGLETON);
   }
 }

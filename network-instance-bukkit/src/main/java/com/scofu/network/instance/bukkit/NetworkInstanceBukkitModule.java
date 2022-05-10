@@ -17,10 +17,10 @@ public class NetworkInstanceBukkitModule extends AbstractFeatureModule {
 
   @Override
   protected void configure() {
-    bind(LocalAvailability.class).in(Scopes.SINGLETON);
+    bind(LocalInstanceProvider.class).in(Scopes.SINGLETON);
     bindFeature(LocalInstanceAnnouncer.class).in(Scopes.SINGLETON);
     bindFeature(TestListener.class).in(Scopes.SINGLETON);
-    bindFeature(GroupListener.class).in(Scopes.SINGLETON);
+    bindFeature(PlayerCountListener.class).in(Scopes.SINGLETON);
     bindFeature(DeployCommand.class).in(Scopes.SINGLETON);
   }
 

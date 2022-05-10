@@ -9,7 +9,9 @@ import com.google.inject.Stage;
 import com.scofu.app.Service;
 import com.scofu.app.bootstrap.BootstrapModule;
 import com.scofu.common.json.PeriodEscapedString;
+import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.network.message.Dispatcher;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -19,6 +21,8 @@ public class TestDocumentService extends Service {
 
   @Inject
   private NetworkRepository networkRepository;
+  @Inject
+  private LazyFactory lazyFactory;
 
   @Override
   protected void configure() {
@@ -32,21 +36,18 @@ public class TestDocumentService extends Service {
     load(Stage.PRODUCTION, this);
     final var id = "test-id";
     final var endpointDomain = "test.scofu.com";
-    final var defaultDeployment = "default";
     final var image = "docker.scofu.com/test-image";
 
-    networkRepository.update(Network.builder()
-        .withId(id)
-        .withDeployment(defaultDeployment, Deployment.builder().withImage(image).build())
-        .withEndpoint(endpointDomain, defaultDeployment)
-        .build()).join();
+    networkRepository.update(
+            lazyFactory.create(Network.class, Network::id, id,
+                Network::deployments,
+                Map.of(new PeriodEscapedString(endpointDomain),
+                    lazyFactory.create(Deployment.class, Deployment::image, image))))
+        .join();
     final var network = networkRepository.findById(id).join().orElse(null);
-    final var endpoint = network.endpoints().get(new PeriodEscapedString(endpointDomain));
-    final var deployment = network.deployments().get(endpoint);
+    final var deployment = network.deployments().get(new PeriodEscapedString(endpointDomain));
     assertNotNull(network);
-    assertNotNull(endpoint);
     assertNotNull(deployment);
-    assertEquals(defaultDeployment, endpoint);
     assertEquals(image, deployment.image());
   }
 }
