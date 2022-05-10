@@ -91,7 +91,7 @@ final class InstanceController implements Feature {
         .via(this::onInstanceDeployRequest);
     messageFlow.subscribeTo(InstanceCreatedMessage.class)
         .withTopic("scofu.instance")
-        .via(this::onInstanceAliveMessage);
+        .via(this::onInstanceCreatedMessage);
   }
 
   @Override
@@ -220,8 +220,8 @@ final class InstanceController implements Feature {
     return future;
   }
 
-  private void onInstanceAliveMessage(InstanceCreatedMessage message) {
-    Optional.ofNullable(pendingDeployments.get(message.instance().deployment().id()))
+  private void onInstanceCreatedMessage(InstanceCreatedMessage message) {
+    Optional.ofNullable(pendingDeployments.remove(message.instance().deployment().id()))
         .ifPresent(future -> future.complete(new InstanceDeployReply(true,
             null,
             message.instance())));
