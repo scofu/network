@@ -1,6 +1,6 @@
 package com.scofu.network.instance;
 
-import static com.scofu.text.Components.center;
+import static com.scofu.text.Components.centerWithSpaces;
 import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.lazy.LazyFactory;
@@ -27,9 +27,13 @@ final class TestDynamicEndpointResolver implements EndpointResolver {
       return CompletableFuture.completedFuture(Optional.empty());
     }
     final var target = domain.split("\\.dynamic\\.scofu\\.com", 2)[0];
-    return CompletableFuture.completedFuture(Optional.of(
-        lazyFactory.create(Deployment.class, Deployment::id, target, Deployment::name, target,
-            Deployment::image, "docker.scofu.com/lobby")));
+    return CompletableFuture.completedFuture(Optional.of(lazyFactory.create(Deployment.class,
+        Deployment::id,
+        target,
+        Deployment::name,
+        target,
+        Deployment::image,
+        "docker.scofu.com/lobby")));
   }
 
   @Override
@@ -39,9 +43,14 @@ final class TestDynamicEndpointResolver implements EndpointResolver {
       return CompletableFuture.completedFuture(Optional.empty());
     }
     final var target = domain.split("\\.dynamic\\.scofu\\.com", 2)[0];
-    final var top = center(text("Scofu Network"), Locale.US, Characters.CHAT_WIDTH / 2);
-    final var bottom = center(text("dynamic -> " + target), Locale.US, Characters.CHAT_WIDTH / 2);
-    return CompletableFuture.completedFuture(
-        Optional.of(lazyFactory.create(Motd.class, Motd::top, top, Motd::bottom, bottom)));
+    final var top = centerWithSpaces(text("Scofu Network"), Locale.US, Characters.CHAT_WIDTH / 2);
+    final var bottom = centerWithSpaces(text("dynamic -> " + target),
+        Locale.US,
+        Characters.CHAT_WIDTH / 2);
+    return CompletableFuture.completedFuture(Optional.of(lazyFactory.create(Motd.class,
+        Motd::top,
+        top,
+        Motd::bottom,
+        bottom)));
   }
 }

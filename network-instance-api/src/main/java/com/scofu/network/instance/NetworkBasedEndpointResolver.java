@@ -1,6 +1,6 @@
 package com.scofu.network.instance;
 
-import static com.scofu.text.Components.center;
+import static com.scofu.text.Components.centerWithSpaces;
 import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.PeriodEscapedString;
@@ -38,8 +38,10 @@ final class NetworkBasedEndpointResolver implements EndpointResolver {
     return networkRepository.findByDomain(domain)
         .thenApplyAsync(o -> o.map(network -> lazyFactory.create(Motd.class,
             Motd::top,
-            center(text("Scofu :^)"), Locale.US, Characters.CHAT_SPACING / 2),
+            centerWithSpaces(text("Scofu :^)"), Locale.US, Characters.CHAT_WIDTH / 2),
             Motd::bottom,
-            center(text("network: " + network.id()), Locale.US, Characters.CHAT_SPACING / 2))));
+            centerWithSpaces(text("network: " + network.id()),
+                Locale.US,
+                Characters.CHAT_WIDTH / 2))));
   }
 }

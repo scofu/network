@@ -1,6 +1,6 @@
 package com.scofu.network.instance;
 
-import static com.scofu.text.Components.center;
+import static com.scofu.text.Components.centerWithSpaces;
 import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.lazy.LazyFactory;
@@ -42,8 +42,10 @@ public class FinalEndpointResolver implements EndpointResolver {
         .filter(Optional::isPresent)
         .map(Optional::get)
         .findFirst()
-        .or(() -> Optional.of(lazyFactory.create(Motd.class, Motd::top,
-            center(text("Scofu :^)"), Locale.US, Characters.CHAT_SPACING / 2), Motd::bottom,
-            center(text("Unknown endpoint!"), Locale.US, Characters.CHAT_SPACING / 2)))));
+        .or(() -> Optional.of(lazyFactory.create(Motd.class,
+            Motd::top,
+            centerWithSpaces(text("Scofu :^)"), Locale.US, Characters.CHAT_WIDTH / 2),
+            Motd::bottom,
+            centerWithSpaces(text("Unknown endpoint!"), Locale.US, Characters.CHAT_WIDTH / 2)))));
   }
 }
