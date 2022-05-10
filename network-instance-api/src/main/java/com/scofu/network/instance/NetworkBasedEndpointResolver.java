@@ -5,7 +5,6 @@ import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.PeriodEscapedString;
 import com.scofu.common.json.lazy.LazyFactory;
-import com.scofu.text.Characters;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Optional;
@@ -38,10 +37,8 @@ final class NetworkBasedEndpointResolver implements EndpointResolver {
     return networkRepository.findByDomain(domain)
         .thenApplyAsync(o -> o.map(network -> lazyFactory.create(Motd.class,
             Motd::top,
-            centerWithSpaces(text("Scofu :^)"), Locale.US, Characters.CHAT_WIDTH / 2),
+            centerWithSpaces(text("Scofu :^)"), Locale.US, 240),
             Motd::bottom,
-            centerWithSpaces(text("network: " + network.id()),
-                Locale.US,
-                Characters.CHAT_WIDTH / 2))));
+            centerWithSpaces(text("network: " + network.id()), Locale.US, 240))));
   }
 }
