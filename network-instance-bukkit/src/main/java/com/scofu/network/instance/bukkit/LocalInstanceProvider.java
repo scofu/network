@@ -35,16 +35,12 @@ public class LocalInstanceProvider {
    */
   public CompletableFuture<Instance> get() {
     return instanceRepository.byIdAsync(localHost.getHostName())
-        .thenComposeAsync(optional -> optional.map(CompletableFuture::completedFuture)
-            .orElseGet(() -> {
+        .thenComposeAsync(
+            optional -> optional.map(CompletableFuture::completedFuture).orElseGet(() -> {
               final var deployment = json.fromString(Deployment.class,
                   System.getenv("INSTANCE_DEPLOYMENT"));
-              final var instance = lazyFactory.create(Instance.class,
-                  Instance::id,
-                  localHost.getHostName(),
-                  Instance::deployment,
-                  deployment,
-                  Instance::address,
+              final var instance = lazyFactory.create(Instance.class, Instance::id,
+                  localHost.getHostName(), Instance::deployment, deployment, Instance::address,
                   new InetSocketAddress(localHost, 25565));
               return instanceRepository.update(instance);
             }));
