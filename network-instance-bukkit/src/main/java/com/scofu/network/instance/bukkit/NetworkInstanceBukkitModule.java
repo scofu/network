@@ -19,6 +19,7 @@ public class NetworkInstanceBukkitModule extends AbstractFeatureModule {
   protected void configure() {
     bind(LocalInstanceProvider.class).in(Scopes.SINGLETON);
     bindFeature(ShutdownAttemptTask.class).in(Scopes.SINGLETON);
+    bindFeature(BasicShutdownAttemptListener.class).in(Scopes.SINGLETON);
     bindFeature(LocalInstanceAnnouncer.class).in(Scopes.SINGLETON);
     bindFeature(TestListener.class).in(Scopes.SINGLETON);
     bindFeature(PlayerCountListener.class).in(Scopes.SINGLETON);
