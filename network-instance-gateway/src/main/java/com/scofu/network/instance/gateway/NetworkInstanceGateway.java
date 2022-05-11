@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerLoginEvent;
@@ -20,7 +21,6 @@ import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.extras.bungee.BungeeCordProxy;
 import net.minestom.server.extras.optifine.OptifineSupport;
-import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.ChunkGenerator;
 import net.minestom.server.instance.ChunkPopulator;
 import net.minestom.server.instance.batch.ChunkBatch;
@@ -82,13 +82,10 @@ public class NetworkInstanceGateway extends Service {
 
   @Override
   public void enable() {
-    System.out.println("Enabling!");
     final var minecraftServer = MinecraftServer.init();
     MinecraftServer.setBrandName("Scofu Gateway");
     OptifineSupport.enable();
     BungeeCordProxy.enable();
-
-    //    MojangAuth.init();
 
     MinecraftServer.getBiomeManager().addBiome(BIOME);
     MinecraftServer.getDimensionTypeManager().addDimension(DIMENSION_TYPE);
@@ -103,7 +100,6 @@ public class NetworkInstanceGateway extends Service {
 
     eventHandler.addListener(PlayerLoginEvent.class, event -> {
       event.setSpawningInstance(instanceContainer);
-      System.out.println("we got to here");
     });
 
     eventHandler.addListener(PlayerBlockBreakEvent.class, event -> event.setCancelled(true));
@@ -124,11 +120,11 @@ public class NetworkInstanceGateway extends Service {
       //      final var changeGameStatePacket = new ChangeGameStatePacket();
       //      changeGameStatePacket.reason = Reason.BEGIN_RAINING;
       //      event.getPlayer().sendPacket(changeGameStatePacket);
-      player.sendMessage(
-          text("Vänta ett ögonblick, en server distribueras åt dig.").color(NamedTextColor.GRAY));
+      player.sendMessage(text("Loading server...").color(NamedTextColor.GRAY));
       games.put(player.getUsername(), new Parkour(player, ThreadLocalRandom.current()));
       player.teleport(new Pos(0.5, 61, 0.5));
       player.setLevel(-999);
+      player.setGameMode(GameMode.ADVENTURE);
 
       final var task = MinecraftServer.getSchedulerManager().buildTask(() -> {
         if (!player.isOnline()) {
@@ -150,79 +146,24 @@ public class NetworkInstanceGateway extends Service {
     minecraftServer.start("0.0.0.0", 25565);
 
     instanceContainer.enableAutoChunkLoad(true);
-    instanceContainer.setTime(18000);
+    //instanceContainer.setTime(18000);
+    instanceContainer.setTime(6000);
     instanceContainer.setTimeRate(0);
     instanceContainer.setBlock(0, 60, 0, Block.BEACON);
-
-    // Initialization
-    //    MinecraftServer minecraftServer = MinecraftServer.init();
-    //
-    //    OptifineSupport.enable();
-    //    BungeeCordProxy.enable();
-    //
-    //    InstanceManager instanceManager = MinecraftServer.getInstanceManager();
-    //    // Create the instance
-    //    InstanceContainer instanceContainer = instanceManager.createInstanceContainer();
-    //    // Set the ChunkGenerator
-    //    instanceContainer.setChunkGenerator(new GeneratorDemo());
-    //
-    //    // Add an event callback to specify the spawning instance (and the spawn position)
-    //    GlobalEventHandler globalEventHandler = MinecraftServer.getGlobalEventHandler();
-    //    globalEventHandler.addListener(PlayerLoginEvent.class, event -> {
-    //      final Player player = event.getPlayer();
-    //      player.setPermissionLevel(2);
-    //      event.setSpawningInstance(instanceContainer);
-    //      player.setRespawnPoint(new Pos(0, 42, 0));
-    //    });
-    //
-    //    // Start the server on port 25565
-    //    minecraftServer.start("0.0.0.0", 25565);
-
   }
-
-  //  private static class GeneratorDemo implements ChunkGenerator {
-  //
-  //    @Override
-  //    public void generateChunkData(ChunkBatch batch, int chunkX, int chunkZ) {
-  //      // Set chunk blocks
-  //      for (byte x = 0; x < Chunk.CHUNK_SIZE_X; x++) {
-  //        for (byte z = 0; z < Chunk.CHUNK_SIZE_Z; z++) {
-  //          for (byte y = 0; y < 40; y++) {
-  //            batch.setBlock(x, y, z, Block.STONE);
-  //          }
-  //        }
-  //      }
-  //    }
-  //
-  //    @Override
-  //    public List<ChunkPopulator> getPopulators() {
-  //      return null;
-  //    }
-  //  }
-
 
   private static class EmptyChunkGenerator implements ChunkGenerator {
 
     @Override
-    public void generateChunkData(ChunkBatch batch, int chunkX, int chunkZ) {
-
-    }
-
-    //    @Override
-    //    public void fillBiomes(Biome[] biomes, int chunkX, int chunkZ) {
-    //      Arrays.fill(biomes, BIOME);
-    //    }
+    public void generateChunkData(ChunkBatch batch, int chunkX, int chunkZ) {}
 
     @Override
     public List<ChunkPopulator> getPopulators() {
-      return List.of(new ChunkPopulator() {
-        @Override
-        public void populateChunk(ChunkBatch batch, Chunk chunk) {
-          for (int x = 0; x < 16; x++) {
-            for (int y = 0; y < 128; y++) {
-              for (int z = 0; z < 16; z++) {
-                chunk.setBiome(x, y, z, BIOME);
-              }
+      return List.of((batch, chunk) -> {
+        for (int x = 0; x < 16; x++) {
+          for (int y = 0; y < 128; y++) {
+            for (int z = 0; z < 16; z++) {
+              chunk.setBiome(x, y, z, BIOME);
             }
           }
         }

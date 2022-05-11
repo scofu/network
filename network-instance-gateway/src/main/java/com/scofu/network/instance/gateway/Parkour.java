@@ -107,9 +107,8 @@ final class Parkour {
       nextPoint = generateNext(new Pos(0, 60, 0));
       nextNextPoint = generateNext(nextPoint);
       if (level > 0) {
-        player.sendMessage(translatable("Du nådde nivå %s!",
-            text(level).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD)).color(
-            NamedTextColor.WHITE));
+        player.sendMessage(
+            translatable("You reached level %s!", text(level)).color(NamedTextColor.GRAY));
       }
       level = 0;
       MinecraftServer.getSchedulerManager()
