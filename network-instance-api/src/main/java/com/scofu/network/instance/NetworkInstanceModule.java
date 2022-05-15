@@ -5,9 +5,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.scofu.common.inject.AbstractFeatureModule;
 import com.scofu.common.inject.annotation.Module;
 
-/**
- * Network instance module.
- */
+/** Network instance module. */
 @Module
 public class NetworkInstanceModule extends AbstractFeatureModule {
 
@@ -15,13 +13,16 @@ public class NetworkInstanceModule extends AbstractFeatureModule {
   protected void configure() {
     bind(InstanceRepository.class).in(Scopes.SINGLETON);
     bind(NetworkRepository.class).in(Scopes.SINGLETON);
+    bind(SystemRepository.class).in(Scopes.SINGLETON);
     bind(FinalEndpointResolver.class).in(Scopes.SINGLETON);
-    final var endpointResolverMultibinder = Multibinder.newSetBinder(binder(),
-        EndpointResolver.class);
-    endpointResolverMultibinder.addBinding()
+    final var endpointResolverMultibinder =
+        Multibinder.newSetBinder(binder(), EndpointResolver.class);
+    endpointResolverMultibinder
+        .addBinding()
         .to(NetworkBasedEndpointResolver.class)
         .in(Scopes.SINGLETON);
-    endpointResolverMultibinder.addBinding()
+    endpointResolverMultibinder
+        .addBinding()
         .to(TestDynamicEndpointResolver.class)
         .in(Scopes.SINGLETON);
   }

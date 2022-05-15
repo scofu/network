@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Instance repository.
+ * Network repository.
  */
 public class NetworkRepository extends AbstractDocumentRepository<Network> {
 
