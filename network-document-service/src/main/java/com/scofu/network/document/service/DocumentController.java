@@ -35,8 +35,8 @@ final class DocumentController implements Feature {
   private final Json json;
 
   @Inject
-  DocumentController(MessageQueue messageQueue, MessageFlow messageFlow,
-      MongoDatabase mongoDatabase, Json json) {
+  DocumentController(
+      MessageQueue messageQueue, MessageFlow messageFlow, MongoDatabase mongoDatabase, Json json) {
     this.messageQueue = messageQueue;
     this.mongoDatabase = mongoDatabase;
     this.json = json;
@@ -44,19 +44,23 @@ final class DocumentController implements Feature {
   }
 
   private void subscribeToRequests(MessageFlow messageFlow) {
-    messageFlow.subscribeTo(DocumentQueryRequest.class)
+    messageFlow
+        .subscribeTo(DocumentQueryRequest.class)
         .replyWith(DocumentQueryReply.class)
         .withTopic("scofu.document.query.#")
         .via(this::onDocumentQueryRequest);
-    messageFlow.subscribeTo(DocumentCountRequest.class)
+    messageFlow
+        .subscribeTo(DocumentCountRequest.class)
         .replyWith(DocumentCountReply.class)
         .withTopic("scofu.document.count.#")
         .via(this::onDocumentCountRequest);
-    messageFlow.subscribeTo(DocumentUpdateRequest.class)
+    messageFlow
+        .subscribeTo(DocumentUpdateRequest.class)
         .replyWith(DocumentUpdateReply.class)
         .withTopic("scofu.document.update.#")
         .via(this::onDocumentUpdateRequest);
-    messageFlow.subscribeTo(DocumentDeleteRequest.class)
+    messageFlow
+        .subscribeTo(DocumentDeleteRequest.class)
         .replyWith(DocumentDeleteReply.class)
         .withTopic("scofu.document.delete.#")
         .via(this::onDocumentDeleteRequest);
@@ -68,10 +72,14 @@ final class DocumentController implements Feature {
       final var collection = mongoDatabase.getCollection(request.collection());
       final var sorted = request.query().sort() != null;
       final var expectedSize = request.query().limit() > 0 ? request.query().limit() : 16;
-      final Map<String, String> reply = sorted ? Maps.newLinkedHashMapWithExpectedSize(expectedSize)
-          : Maps.newHashMapWithExpectedSize(expectedSize);
-      final var filter = request.query().filter() == null ? new Document()
-          : new Document(request.query().filter().asMap());
+      final Map<String, String> reply =
+          sorted
+              ? Maps.newLinkedHashMapWithExpectedSize(expectedSize)
+              : Maps.newHashMapWithExpectedSize(expectedSize);
+      final var filter =
+          request.query().filter() == null
+              ? new Document()
+              : new Document(request.query().filter().asMap());
       var matches = collection.find(filter);
       if (request.query().sort() != null) {
         matches = matches.sort(new Document(request.query().sort().asMap()));
@@ -82,8 +90,10 @@ final class DocumentController implements Feature {
       if (request.query().limit() > 0) {
         matches = matches.limit(request.query().limit());
       }
-      matches.forEach((Consumer<? super Document>) document -> reply.put(document.getString("_id"),
-          json.toString(Bson.class, document)));
+      matches.forEach(
+          (Consumer<? super Document>)
+              document ->
+                  reply.put(document.getString("_id"), json.toString(Bson.class, document)));
       return completedFuture(new DocumentQueryReply(true, null, reply));
     } catch (Throwable throwable) {
       throwable.printStackTrace();
@@ -97,8 +107,10 @@ final class DocumentController implements Feature {
   private CompletableFuture<DocumentCountReply> onDocumentCountRequest(
       DocumentCountRequest request) {
     final var collection = mongoDatabase.getCollection(request.collection());
-    final var count = request.query().filter() == null ? collection.countDocuments()
-        : collection.countDocuments(new Document(request.query().filter().asMap()));
+    final var count =
+        request.query().filter() == null
+            ? collection.countDocuments()
+            : collection.countDocuments(new Document(request.query().filter().asMap()));
     return completedFuture(new DocumentCountReply(true, null, count));
   }
 
@@ -108,8 +120,11 @@ final class DocumentController implements Feature {
     final var document = (Document) json.fromString(Bson.class, request.json());
     final UpdateResult result;
     try {
-      result = collection.replaceOne(Filters.eq("_id", document.getString("_id")), document,
-          new ReplaceOptions().upsert(true));
+      result =
+          collection.replaceOne(
+              Filters.eq("_id", document.getString("_id")),
+              document,
+              new ReplaceOptions().upsert(true));
     } catch (Throwable throwable) {
       throwable.printStackTrace();
       return completedFuture(new DocumentUpdateReply(false, "Error"));
@@ -118,7 +133,8 @@ final class DocumentController implements Feature {
       return completedFuture(
           new DocumentUpdateReply(false, "Database did not acknowledge update."));
     }
-    messageQueue.declareFor(DocumentUpdatedMessage.class)
+    messageQueue
+        .declareFor(DocumentUpdatedMessage.class)
         .withTopic("scofu.document.updated." + request.collection())
         .push(new DocumentUpdatedMessage(request.collection(), request.json()));
     return completedFuture(new DocumentUpdateReply(true, null));
@@ -132,7 +148,8 @@ final class DocumentController implements Feature {
       return completedFuture(
           new DocumentDeleteReply(false, "Database did not acknowledge deletion."));
     }
-    messageQueue.declareFor(DocumentDeletedMessage.class)
+    messageQueue
+        .declareFor(DocumentDeletedMessage.class)
         .withTopic("scofu.document.deleted." + request.collection())
         .push(new DocumentDeletedMessage(request.collection(), request.id()));
     return completedFuture(new DocumentDeleteReply(true, null));

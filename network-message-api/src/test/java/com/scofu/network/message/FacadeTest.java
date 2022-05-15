@@ -14,13 +14,10 @@ import com.scofu.network.message.facade.annotation.Subscribe;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests the {@link com.scofu.network.message.facade.Facade}.
- */
+/** Tests the {@link com.scofu.network.message.facade.Facade}. */
 public class FacadeTest extends Service {
 
-  @Inject
-  private Facade facade;
+  @Inject private Facade facade;
 
   @Override
   protected void configure() {
@@ -36,9 +33,7 @@ public class FacadeTest extends Service {
     assertEquals("hello", pong.tag());
   }
 
-  /**
-   * Facade for {@link Ping}.
-   */
+  /** Facade for {@link Ping}. */
   public interface Pinger {
 
     /**

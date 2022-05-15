@@ -4,9 +4,7 @@ import com.google.inject.Scopes;
 import com.scofu.common.inject.AbstractFeatureModule;
 import com.scofu.common.inject.annotation.Module;
 
-/**
- * Network instance bungee module.
- */
+/** Network instance bungee module. */
 @Module
 public class NetworkInstanceBungeeModule extends AbstractFeatureModule {
 

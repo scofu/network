@@ -25,19 +25,26 @@ final class InternalPage<D extends Document> implements Page<D> {
   private final LoadingCache<Key, Map<D, Integer>> cache;
   private final Book<D> parent;
 
-  public InternalPage(DocumentRepository<D> repository, PageOptions pageOptions, Query query,
-      Book<D> parent) {
-    this(repository, new Key(pageOptions, query.edit()
-        .skip(pageOptions.documentsToSkip())
-        .limitTo(pageOptions.documentsPerPage())
-        .build()), parent);
+  public InternalPage(
+      DocumentRepository<D> repository, PageOptions pageOptions, Query query, Book<D> parent) {
+    this(
+        repository,
+        new Key(
+            pageOptions,
+            query
+                .edit()
+                .skip(pageOptions.documentsToSkip())
+                .limitTo(pageOptions.documentsPerPage())
+                .build()),
+        parent);
   }
 
   public InternalPage(DocumentRepository<D> repository, Key key, Book<D> parent) {
     this.key = key;
-    this.cache = CacheBuilder.newBuilder()
-        .expireAfterAccess(1, TimeUnit.HOURS)
-        .build(createCacheLoader(repository));
+    this.cache =
+        CacheBuilder.newBuilder()
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build(createCacheLoader(repository));
     this.parent = parent;
   }
 
@@ -64,19 +71,22 @@ final class InternalPage<D extends Document> implements Page<D> {
       @Override
       public Map<D, Integer> load(Key key) throws Exception {
         final var index = new AtomicInteger(key.options.documentsToSkip());
-        return repository.find(key.query)
-            .thenApply(map -> map.values()
-                .stream()
-                .collect(
-                    Collectors.toMap(Function.identity(), d -> index.getAndIncrement(), (x, y) -> x,
-                        Maps::newLinkedHashMap)))
+        return repository
+            .find(key.query)
+            .thenApply(
+                map ->
+                    map.values().stream()
+                        .collect(
+                            Collectors.toMap(
+                                Function.identity(),
+                                d -> index.getAndIncrement(),
+                                (x, y) -> x,
+                                Maps::newLinkedHashMap)))
             .join();
       }
     };
   }
 
-  /**
-   * Key that pairs options with query.
-   */
+  /** Key that pairs options with query. */
   public record Key(PageOptions options, Query query) {}
 }

@@ -1,12 +1,9 @@
 package com.scofu.network.document;
 
-/**
- * Document query exception.
- */
+/** Document query exception. */
 public class DocumentQueryException extends DocumentException {
 
-  public DocumentQueryException() {
-  }
+  public DocumentQueryException() {}
 
   public DocumentQueryException(String s) {
     super(s);

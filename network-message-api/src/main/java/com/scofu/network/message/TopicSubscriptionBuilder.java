@@ -21,5 +21,4 @@ public interface TopicSubscriptionBuilder<S> {
    * @param moreTopics the rest of the topics
    */
   S withTopics(String firstTopic, String... moreTopics);
-
 }

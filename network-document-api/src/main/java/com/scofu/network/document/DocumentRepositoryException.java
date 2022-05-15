@@ -1,12 +1,9 @@
 package com.scofu.network.document;
 
-/**
- * Document repository exception.
- */
+/** Document repository exception. */
 public class DocumentRepositoryException extends DocumentException {
 
-  public DocumentRepositoryException() {
-  }
+  public DocumentRepositoryException() {}
 
   public DocumentRepositoryException(String s) {
     super(s);

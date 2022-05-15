@@ -12,9 +12,7 @@ import com.scofu.network.message.internal.InternalMessageModule;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Network message module.
- */
+/** Network message module. */
 @Module
 public class NetworkMessageModule extends AbstractFeatureModule {
 
@@ -22,8 +20,9 @@ public class NetworkMessageModule extends AbstractFeatureModule {
 
   @Override
   protected void configure() {
-    final var executorBinder = OptionalBinder.newOptionalBinder(binder(),
-        Key.get(ExecutorService.class, Names.named(PUBLISHER_EXECUTOR_NAME)));
+    final var executorBinder =
+        OptionalBinder.newOptionalBinder(
+            binder(), Key.get(ExecutorService.class, Names.named(PUBLISHER_EXECUTOR_NAME)));
     executorBinder.setDefault().toProvider(this::createDefaultExecutor).in(Scopes.SINGLETON);
     install(new InternalMessageModule());
     bind(Facade.class).in(Scopes.SINGLETON);

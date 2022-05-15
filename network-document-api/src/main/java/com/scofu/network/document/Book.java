@@ -18,14 +18,14 @@ public interface Book<D extends Document> {
   /**
    * Creates and returns a new book.
    *
-   * @param query            the query
+   * @param query the query
    * @param documentsPerPage the amount of documents per page
-   * @param repository       the repository
-   * @param duration         the duration between refreshes
-   * @param <D>              the type of the document
+   * @param repository the repository
+   * @param duration the duration between refreshes
+   * @param <D> the type of the document
    */
-  static <D extends Document> Book<D> of(Query query, int documentsPerPage,
-      DocumentRepository<D> repository, Duration duration) {
+  static <D extends Document> Book<D> of(
+      Query query, int documentsPerPage, DocumentRepository<D> repository, Duration duration) {
     return InternalBook.newInternalBook(query, documentsPerPage, repository, duration);
   }
 
@@ -36,9 +36,7 @@ public interface Book<D extends Document> {
    */
   Page<D> page(int page);
 
-  /**
-   * Returns the duration until the next refresh.
-   */
+  /** Returns the duration until the next refresh. */
   Duration durationUntilNextRefresh();
 
   /**

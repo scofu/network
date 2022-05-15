@@ -11,15 +11,11 @@ import com.scofu.app.bootstrap.BootstrapModule;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests the {@link Dispatcher}.
- */
+/** Tests the {@link Dispatcher}. */
 public class DispatcherTest extends Service {
 
-  @Inject
-  private MessageQueue messageQueue;
-  @Inject
-  private MessageFlow messageFlow;
+  @Inject private MessageQueue messageQueue;
+  @Inject private MessageFlow messageFlow;
 
   @Override
   protected void configure() {
@@ -30,14 +26,17 @@ public class DispatcherTest extends Service {
   @Test
   public void test() {
     load(Stage.PRODUCTION, this);
-    messageFlow.subscribeTo(Ping.class)
+    messageFlow
+        .subscribeTo(Ping.class)
         .replyWith(Ping.class)
         .via(CompletableFuture::completedFuture);
-    final var pong = messageQueue.declareFor(Ping.class)
-        .expectReply(Ping.class)
-        .push(new Ping(System.nanoTime(), "hi"))
-        .thenApply(ping -> new Ping(System.nanoTime() - ping.ns(), "hello"))
-        .join();
+    final var pong =
+        messageQueue
+            .declareFor(Ping.class)
+            .expectReply(Ping.class)
+            .push(new Ping(System.nanoTime(), "hi"))
+            .thenApply(ping -> new Ping(System.nanoTime() - ping.ns(), "hello"))
+            .join();
     assertNotNull(pong);
     assertEquals("hello", pong.tag());
   }

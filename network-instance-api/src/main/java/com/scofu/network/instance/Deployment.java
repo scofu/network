@@ -3,9 +3,7 @@ package com.scofu.network.instance;
 import com.scofu.common.json.lazy.Lazy;
 import java.util.Map;
 
-/**
- * A deployment.
- */
+/** A deployment. */
 public interface Deployment extends Lazy {
 
   String id();
@@ -15,5 +13,4 @@ public interface Deployment extends Lazy {
   String name();
 
   Map<String, String> environment();
-
 }

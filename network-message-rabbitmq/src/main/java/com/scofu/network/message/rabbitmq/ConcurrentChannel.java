@@ -16,8 +16,7 @@ final class ConcurrentChannel {
   private final Channel channel;
   private final ExecutorService executorService;
 
-  ConcurrentChannel(Connection connection, ExecutorService executorService)
-      throws IOException {
+  ConcurrentChannel(Connection connection, ExecutorService executorService) throws IOException {
     this.connection = connection;
     this.channel = connection.createChannel();
     this.executorService = executorService;
@@ -26,25 +25,27 @@ final class ConcurrentChannel {
   static ConcurrentChannel of(ConnectionFactory factory) {
     final var executorService = Executors.newSingleThreadExecutor();
     var future = new CompletableFuture<ConcurrentChannel>();
-    executorService.execute(() -> {
-      try {
-        future.complete(new ConcurrentChannel(factory.newConnection(), executorService));
-      } catch (IOException | TimeoutException e) {
-        throw new RuntimeException(e);
-      }
-    });
+    executorService.execute(
+        () -> {
+          try {
+            future.complete(new ConcurrentChannel(factory.newConnection(), executorService));
+          } catch (IOException | TimeoutException e) {
+            throw new RuntimeException(e);
+          }
+        });
     return future.join();
   }
 
   public void accept(ThrowingConsumer<? super Channel> consumer) {
-    executorService.execute(() -> {
-      try {
-        consumer.accept(channel);
-      } catch (Throwable throwable) {
-        throwable.printStackTrace();
-        System.out.println("ERROR RMQ");
-      }
-    });
+    executorService.execute(
+        () -> {
+          try {
+            consumer.accept(channel);
+          } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            System.out.println("ERROR RMQ");
+          }
+        });
   }
 
   public Connection connection() {

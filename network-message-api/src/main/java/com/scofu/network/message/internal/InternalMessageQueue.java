@@ -31,7 +31,10 @@ final class InternalMessageQueue implements MessageQueue {
   private final PendingRequestStore pendingRequestStore;
 
   @Inject
-  InternalMessageQueue(TypeCache typeCache, Json json, MessageFlow messageFlow,
+  InternalMessageQueue(
+      TypeCache typeCache,
+      Json json,
+      MessageFlow messageFlow,
       Dispatcher dispatcher,
       @Named(NetworkMessageModule.PUBLISHER_EXECUTOR_NAME) ExecutorService executorService,
       PendingRequestStore pendingRequestStore) {
@@ -51,8 +54,8 @@ final class InternalMessageQueue implements MessageQueue {
   @Override
   public <T> ReplyingQueueBuilder<T, Void> declareFor(TypeLiteral<T> type) {
     checkNotNull(type, "type");
-    return new InternalQueueBuilder<>(Queue.of(type, Types.voidTypeLiteral(), "global"),
-        this::declareFor);
+    return new InternalQueueBuilder<>(
+        Queue.of(type, Types.voidTypeLiteral(), "global"), this::declareFor);
   }
 
   @Override
@@ -62,13 +65,16 @@ final class InternalMessageQueue implements MessageQueue {
   }
 
   private <T, R> CompletableFuture<R> declareFor(T t, Queue<T, R> queue) {
-    return supplyAsync(() -> {
-      final var expectsReply = !void.class.isAssignableFrom(queue.replyType().getRawType());
-      if (expectsReply) {
-        return dispatchPayloadAsRequest(t, queue);
-      }
-      return dispatchPayloadAsFanout(t, queue);
-    }, executorService).thenCompose(Function.identity());
+    return supplyAsync(
+            () -> {
+              final var expectsReply = !void.class.isAssignableFrom(queue.replyType().getRawType());
+              if (expectsReply) {
+                return dispatchPayloadAsRequest(t, queue);
+              }
+              return dispatchPayloadAsFanout(t, queue);
+            },
+            executorService)
+        .thenCompose(Function.identity());
   }
 
   @Override
@@ -81,8 +87,8 @@ final class InternalMessageQueue implements MessageQueue {
     final var future = new CompletableFuture<R>().orTimeout(60, TimeUnit.SECONDS);
     final var requestId = pendingRequestStore.prepare(future);
     final var payload = createPayload(t, queue, requestId);
-    System.out.printf("%ssent: %s%s%n", "\u001B[35m", json.toString(Payload.class, payload),
-        "\u001B[0m");
+    System.out.printf(
+        "%ssent: %s%s%n", "\u001B[35m", json.toString(Payload.class, payload), "\u001B[0m");
     final var body = json.toBytes(Payload.class, payload);
     dispatcher.dispatchRequest(queue.topic(), body);
     if (future.isDone()) {
@@ -95,8 +101,8 @@ final class InternalMessageQueue implements MessageQueue {
   private <T, R> CompletableFuture<R> dispatchPayloadAsFanout(T t, Queue<T, R> queue) {
     final var future = CompletableFuture.<R>completedFuture(null);
     final var payload = createPayload(t, queue, null);
-    System.out.printf("%ssent: %s%s%n", "\u001B[35m", json.toString(Payload.class, payload),
-        "\u001B[0m");
+    System.out.printf(
+        "%ssent: %s%s%n", "\u001B[35m", json.toString(Payload.class, payload), "\u001B[0m");
     final var body = json.toBytes(Payload.class, payload);
     dispatcher.dispatchFanout(queue.topic(), body);
     return future;

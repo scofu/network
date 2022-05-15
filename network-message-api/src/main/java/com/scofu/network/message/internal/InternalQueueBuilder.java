@@ -13,8 +13,8 @@ final class InternalQueueBuilder<T, R> implements ReplyingQueueBuilder<T, R> {
   private final Queue<T, R> queue;
   private final BiFunction<T, Queue<T, ?>, CompletableFuture<?>> function;
 
-  public InternalQueueBuilder(Queue<T, R> queue,
-      BiFunction<T, Queue<T, ?>, CompletableFuture<?>> function) {
+  public InternalQueueBuilder(
+      Queue<T, R> queue, BiFunction<T, Queue<T, ?>, CompletableFuture<?>> function) {
     this.queue = queue;
     this.function = function;
   }

@@ -13,5 +13,4 @@ public interface DocumentRepository<D extends Document> extends Repository<Strin
    * @param stateListener the state listener
    */
   void addStateListener(DocumentStateListener<D> stateListener);
-
 }

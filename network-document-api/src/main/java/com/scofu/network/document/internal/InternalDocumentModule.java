@@ -3,9 +3,7 @@ package com.scofu.network.document.internal;
 import com.google.inject.Scopes;
 import com.scofu.common.inject.AbstractFeatureModule;
 
-/**
- * Internal document module.
- */
+/** Internal document module. */
 public class InternalDocumentModule extends AbstractFeatureModule {
 
   @Override

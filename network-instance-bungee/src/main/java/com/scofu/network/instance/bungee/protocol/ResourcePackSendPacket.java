@@ -6,9 +6,7 @@ import java.util.Objects;
 import net.md_5.bungee.protocol.AbstractPacketHandler;
 import net.md_5.bungee.protocol.DefinedPacket;
 
-/**
- * Resource pack send packet.
- */
+/** Resource pack send packet. */
 public class ResourcePackSendPacket extends DefinedPacket {
 
   private String url;
@@ -16,18 +14,15 @@ public class ResourcePackSendPacket extends DefinedPacket {
   private boolean required;
   private String componentJson;
 
-  /**
-   * Constructs a new resource pack send packet.
-   */
-  public ResourcePackSendPacket() {
-  }
+  /** Constructs a new resource pack send packet. */
+  public ResourcePackSendPacket() {}
 
   /**
    * Constructs a new resource pack send packet.
    *
-   * @param url           the url
-   * @param hash          the hash
-   * @param required      if required
+   * @param url the url
+   * @param hash the hash
+   * @param required if required
    * @param componentJson the component json
    */
   public ResourcePackSendPacket(String url, String hash, boolean required, String componentJson) {
@@ -56,9 +51,7 @@ public class ResourcePackSendPacket extends DefinedPacket {
   }
 
   @Override
-  public void read(ByteBuf buf) {
-
-  }
+  public void read(ByteBuf buf) {}
 
   @Override
   public boolean equals(Object o) {
@@ -69,7 +62,9 @@ public class ResourcePackSendPacket extends DefinedPacket {
       return false;
     }
     ResourcePackSendPacket that = (ResourcePackSendPacket) o;
-    return required == that.required && url.equals(that.url) && hash.equals(that.hash)
+    return required == that.required
+        && url.equals(that.url)
+        && hash.equals(that.hash)
         && Objects.equals(componentJson, that.componentJson);
   }
 

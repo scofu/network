@@ -1,8 +1,6 @@
 package com.scofu.network.document;
 
-/**
- * Builds text.
- */
+/** Builds text. */
 public class TextBuilder {
 
   private final String search;
@@ -39,9 +37,7 @@ public class TextBuilder {
     return this;
   }
 
-  /**
-   * Sets it to case-sensitive.
-   */
+  /** Sets it to case-sensitive. */
   public TextBuilder caseSensitive() {
     this.caseSensitive = true;
     return this;
@@ -57,9 +53,7 @@ public class TextBuilder {
     return this;
   }
 
-  /**
-   * Sets it to diacritic-sensitive.
-   */
+  /** Sets it to diacritic-sensitive. */
   public TextBuilder diacriticSensitive() {
     this.diacriticSensitive = true;
     return this;

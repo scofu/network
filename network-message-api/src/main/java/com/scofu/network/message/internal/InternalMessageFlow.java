@@ -32,14 +32,17 @@ final class InternalMessageFlow implements MessageFlow {
   private final Multimap<String, Function> subscriptions;
 
   @Inject
-  InternalMessageFlow(Json json, TypeCache typeCache, ObservableTopics observableTopics,
+  InternalMessageFlow(
+      Json json,
+      TypeCache typeCache,
+      ObservableTopics observableTopics,
       PendingRequestStore pendingRequestStore) {
     this.json = json;
     this.typeCache = typeCache;
     this.observableTopics = observableTopics;
     this.pendingRequestStore = pendingRequestStore;
-    this.subscriptions = Multimaps.newSetMultimap(Maps.newConcurrentMap(),
-        Sets::newConcurrentHashSet);
+    this.subscriptions =
+        Multimaps.newSetMultimap(Maps.newConcurrentMap(), Sets::newConcurrentHashSet);
   }
 
   @Override
@@ -52,8 +55,8 @@ final class InternalMessageFlow implements MessageFlow {
     System.out.println("received bytes: " + message.length);
     checkNotNull(message, "message");
     final var payload = json.fromBytes(Payload.class, message);
-    System.out.printf("%sreceived: %s%s%n", "\u001B[36m", json.toString(Payload.class, payload),
-        "\u001B[0m");
+    System.out.printf(
+        "%sreceived: %s%s%n", "\u001B[36m", json.toString(Payload.class, payload), "\u001B[0m");
     if (payload == null) {
       throw new IllegalStateException(
           String.format("Couldn't parse payload: %s", new String(message, StandardCharsets.UTF_8)));
@@ -95,8 +98,10 @@ final class InternalMessageFlow implements MessageFlow {
 
   private <T, R> void subscribe(Subscription<T, R> subscription) {
     final var key =
-        typeCache.asString(subscription.type().getType()) + (subscription.replyType() == null ? ""
-            : typeCache.asString(subscription.replyType().getType()));
+        typeCache.asString(subscription.type().getType())
+            + (subscription.replyType() == null
+                ? ""
+                : typeCache.asString(subscription.replyType().getType()));
     subscriptions.put(key, subscription.function());
     if (subscription.topics().isEmpty()) {
       subscription.topics().add("global");
@@ -105,7 +110,8 @@ final class InternalMessageFlow implements MessageFlow {
   }
 
   private void completeRequest(Payload payload) {
-    pendingRequestStore.poll(payload.id())
+    pendingRequestStore
+        .poll(payload.id())
         .ifPresent(future -> future.complete(payload.reply().value()));
   }
 
@@ -120,27 +126,32 @@ final class InternalMessageFlow implements MessageFlow {
     System.out.println("1key = " + key);
     System.out.println("1subscriptions = " + subscriptions.stream().toList());
 
-    return supplyAsync(() -> {
-      final var message = payload.message().value();
-      for (var subscription : subscriptions) {
-        final var reply = (byte[]) ((CompletableFuture) subscription.apply(message)).thenApply(
-            resolved -> serializePayload(payload, resolved)).join();
-        if (reply != null) {
-          return reply;
-        }
-      }
-      return null;
-    });
+    return supplyAsync(
+        () -> {
+          final var message = payload.message().value();
+          for (var subscription : subscriptions) {
+            final var reply =
+                (byte[])
+                    ((CompletableFuture) subscription.apply(message))
+                        .thenApply(resolved -> serializePayload(payload, resolved))
+                        .join();
+            if (reply != null) {
+              return reply;
+            }
+          }
+          return null;
+        });
   }
 
   private byte[] serializePayload(Payload payload, Object resolvedReply) {
     if (payload.id() == null || resolvedReply == null) {
       return null;
     }
-    final var replyPayload = Payload.of(payload.id(), null,
-        dynamic(payload.reply().type(), resolvedReply));
-    System.out.printf("%ssent reply: %s%s%n", "\u001B[34m",
-        json.toString(Payload.class, replyPayload), "\u001B[0m");
+    final var replyPayload =
+        Payload.of(payload.id(), null, dynamic(payload.reply().type(), resolvedReply));
+    System.out.printf(
+        "%ssent reply: %s%s%n",
+        "\u001B[34m", json.toString(Payload.class, replyPayload), "\u001B[0m");
     return json.toBytes(Payload.class, replyPayload);
   }
 }

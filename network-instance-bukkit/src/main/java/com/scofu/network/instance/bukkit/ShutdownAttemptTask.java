@@ -30,8 +30,9 @@ final class ShutdownAttemptTask implements Runnable, Feature {
     if (event.isCancelled()) {
       return;
     }
-    server.getScheduler()
-        .runTask(plugin,
-            () -> server.dispatchCommand(plugin.getServer().getConsoleSender(), "stop"));
+    server
+        .getScheduler()
+        .runTask(
+            plugin, () -> server.dispatchCommand(plugin.getServer().getConsoleSender(), "stop"));
   }
 }

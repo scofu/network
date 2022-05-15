@@ -5,9 +5,7 @@ import com.google.inject.Stage;
 import com.scofu.app.Service;
 import com.scofu.app.bootstrap.BootstrapModule;
 
-/**
- * Network instance service.
- */
+/** Network instance service. */
 public class NetworkInstanceService extends Service {
 
   public static void main(String[] args) {

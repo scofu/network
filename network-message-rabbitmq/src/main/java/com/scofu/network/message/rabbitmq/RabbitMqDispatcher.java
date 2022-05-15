@@ -50,10 +50,12 @@ final class RabbitMqDispatcher implements Dispatcher {
   @Override
   public void dispatchRequest(String topic, byte... message) {
     final var correlationId = UUID.randomUUID().toString();
-    final var properties = PROPERTIES.builder()
-        .correlationId(correlationId)
-        .replyTo(replyQueueReference.get())
-        .build();
+    final var properties =
+        PROPERTIES
+            .builder()
+            .correlationId(correlationId)
+            .replyTo(replyQueueReference.get())
+            .build();
     concurrentChannel.accept(
         channel -> channel.basicPublish(GLOBAL_EXCHANGE, topic, properties, message));
   }
@@ -61,10 +63,11 @@ final class RabbitMqDispatcher implements Dispatcher {
   @Override
   public void close() throws IOException {
     final var latch = new CountDownLatch(1);
-    concurrentChannel.accept(channel -> {
-      concurrentChannel.connection().close(1000);
-      latch.countDown();
-    });
+    concurrentChannel.accept(
+        channel -> {
+          concurrentChannel.connection().close(1000);
+          latch.countDown();
+        });
     try {
       latch.await();
     } catch (InterruptedException e) {
@@ -84,10 +87,11 @@ final class RabbitMqDispatcher implements Dispatcher {
 
   private void awaitChannelSetup(MessageFlow messageFlow) {
     final var latch = new CountDownLatch(1);
-    concurrentChannel.accept(channel -> {
-      setupTopicObservationAndConsumer(messageFlow, channel);
-      latch.countDown();
-    });
+    concurrentChannel.accept(
+        channel -> {
+          setupTopicObservationAndConsumer(messageFlow, channel);
+          latch.countDown();
+        });
     try {
       final var didTimeout = !latch.await(60, TimeUnit.SECONDS);
       if (didTimeout) {
@@ -105,32 +109,42 @@ final class RabbitMqDispatcher implements Dispatcher {
     channel.basicQos(100);
     channel.exchangeDeclare(GLOBAL_EXCHANGE, "topic", false, true, null);
 
-    messageFlow.topics().observe(topic -> {
-      try {
-        channel.queueBind(replyQueueName, GLOBAL_EXCHANGE, topic);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    });
+    messageFlow
+        .topics()
+        .observe(
+            topic -> {
+              try {
+                channel.queueBind(replyQueueName, GLOBAL_EXCHANGE, topic);
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
+            });
 
-    channel.basicConsume(replyQueueName, true,
-        (consumerTag, delivery) -> consumeDelivery(messageFlow, channel, delivery), consumerTag -> {
-        });
+    channel.basicConsume(
+        replyQueueName,
+        true,
+        (consumerTag, delivery) -> consumeDelivery(messageFlow, channel, delivery),
+        consumerTag -> {});
   }
 
   private void consumeDelivery(MessageFlow messageFlow, Channel channel, Delivery delivery) {
     //    System.out.println("delivery.getEnvelope() = " + delivery.getEnvelope());
     //    System.out.println("delivery.getProperties() = " + delivery.getProperties());
-    messageFlow.handleMessageOrRequest(delivery.getBody()).whenComplete((reply, throwable) -> {
-      if (throwable != null) {
-        throwable.printStackTrace();
-        return;
-      }
-      if (reply == null || reply.length == 0 || delivery.getProperties().getReplyTo() == null) {
-        return;
-      }
-      publishReply(channel, reply, delivery);
-    });
+    messageFlow
+        .handleMessageOrRequest(delivery.getBody())
+        .whenComplete(
+            (reply, throwable) -> {
+              if (throwable != null) {
+                throwable.printStackTrace();
+                return;
+              }
+              if (reply == null
+                  || reply.length == 0
+                  || delivery.getProperties().getReplyTo() == null) {
+                return;
+              }
+              publishReply(channel, reply, delivery);
+            });
   }
 
   private void publishReply(Channel channel, byte[] reply, Delivery delivery) {

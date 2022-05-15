@@ -52,35 +52,49 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   /**
    * Constructs a new abstract document repository.
    *
-   * @param messageQueue            the message queue
-   * @param messageFlow             the message flow
-   * @param type                    the type
-   * @param json                    the json
+   * @param messageQueue the message queue
+   * @param messageFlow the message flow
+   * @param type the type
+   * @param json the json
    * @param repositoryConfiguration the repository configuration
    */
-  public AbstractDocumentRepository(MessageQueue messageQueue, MessageFlow messageFlow, Type type,
-      Json json, RepositoryConfiguration repositoryConfiguration) {
+  public AbstractDocumentRepository(
+      MessageQueue messageQueue,
+      MessageFlow messageFlow,
+      Type type,
+      Json json,
+      RepositoryConfiguration repositoryConfiguration) {
     this.collection = repositoryConfiguration.collection();
     this.type = type;
     this.json = json;
-    this.findQueue = messageQueue.declareFor(DocumentQueryRequest.class)
-        .expectReply(DocumentQueryReply.class)
-        .withTopic("scofu.document.query." + collection);
-    this.countQueue = messageQueue.declareFor(DocumentCountRequest.class)
-        .expectReply(DocumentCountReply.class)
-        .withTopic("scofu.document.count." + collection);
-    this.updateQueue = messageQueue.declareFor(DocumentUpdateRequest.class)
-        .expectReply(DocumentUpdateReply.class)
-        .withTopic("scofu.document.update." + collection);
-    this.deleteQueue = messageQueue.declareFor(DocumentDeleteRequest.class)
-        .expectReply(DocumentDeleteReply.class)
-        .withTopic("scofu.document.delete." + collection);
+    this.findQueue =
+        messageQueue
+            .declareFor(DocumentQueryRequest.class)
+            .expectReply(DocumentQueryReply.class)
+            .withTopic("scofu.document.query." + collection);
+    this.countQueue =
+        messageQueue
+            .declareFor(DocumentCountRequest.class)
+            .expectReply(DocumentCountReply.class)
+            .withTopic("scofu.document.count." + collection);
+    this.updateQueue =
+        messageQueue
+            .declareFor(DocumentUpdateRequest.class)
+            .expectReply(DocumentUpdateReply.class)
+            .withTopic("scofu.document.update." + collection);
+    this.deleteQueue =
+        messageQueue
+            .declareFor(DocumentDeleteRequest.class)
+            .expectReply(DocumentDeleteReply.class)
+            .withTopic("scofu.document.delete." + collection);
     this.cache = createCache(repositoryConfiguration);
     this.stateListeners = Lists.newArrayList();
-    messageFlow.subscribeTo(DocumentUpdatedMessage.class)
+    messageFlow
+        .subscribeTo(DocumentUpdatedMessage.class)
         .withTopic("scofu.document.updated." + collection)
         .via(this::onDocumentUpdatedMessage);
-    messageFlow.subscribeTo(DocumentDeletedMessage.class)
+    messageFlow
+        .subscribeTo(DocumentDeletedMessage.class)
         .withTopic("scofu.document.deleted." + collection)
         .via(this::onDocumentDeletedMessage);
   }
@@ -109,65 +123,81 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
     if (cache.asMap().containsKey(id)) {
       return completedFuture(Optional.of(cache.asMap().get(id)));
     }
-    return findById(id).thenApplyAsync(optional -> optional.map(document -> {
-      cache.put(id, document);
-      return document;
-    }));
+    return findById(id)
+        .thenApplyAsync(
+            optional ->
+                optional.map(
+                    document -> {
+                      cache.put(id, document);
+                      return document;
+                    }));
   }
 
   @Override
   public CompletableFuture<Map<String, D>> find(Query query) {
-    return findQueue.push(new DocumentQueryRequest(collection, query)).thenApplyAsync(reply -> {
-      if (!reply.ok()) {
-        throw new DocumentQueryException("Query error: " + reply.error());
-      }
-      return reply.documentsById()
-          .entrySet()
-          .stream()
-          .collect(
-              Collectors.toMap(Entry::getKey, e -> json.fromString(type, e.getValue()), (x, y) -> x,
-                  Maps::newLinkedHashMap));
-    });
+    return findQueue
+        .push(new DocumentQueryRequest(collection, query))
+        .thenApplyAsync(
+            reply -> {
+              if (!reply.ok()) {
+                throw new DocumentQueryException("Query error: " + reply.error());
+              }
+              return reply.documentsById().entrySet().stream()
+                  .collect(
+                      Collectors.toMap(
+                          Entry::getKey,
+                          e -> json.fromString(type, e.getValue()),
+                          (x, y) -> x,
+                          Maps::newLinkedHashMap));
+            });
   }
 
   @Override
   public CompletableFuture<Optional<D>> findById(String id) {
-    return find(Query.builder().filter(where("_id", id)).limitTo(1).build()).thenApplyAsync(
-        documents -> documents.values().stream().findFirst());
+    return find(Query.builder().filter(where("_id", id)).limitTo(1).build())
+        .thenApplyAsync(documents -> documents.values().stream().findFirst());
   }
 
   @Override
   public CompletableFuture<Long> count(Query query) {
-    return countQueue.push(new DocumentCountRequest(collection, query)).thenApplyAsync(reply -> {
-      if (!reply.ok()) {
-        throw new DocumentQueryException("Count error: " + reply.error());
-      }
-      return reply.count();
-    });
+    return countQueue
+        .push(new DocumentCountRequest(collection, query))
+        .thenApplyAsync(
+            reply -> {
+              if (!reply.ok()) {
+                throw new DocumentQueryException("Count error: " + reply.error());
+              }
+              return reply.count();
+            });
   }
 
   @Override
   public CompletableFuture<D> update(D document) {
     checkNotNull(document, "document");
     cache.put(document.id(), document);
-    return updateQueue.push(new DocumentUpdateRequest(collection, json.toString(type, document)))
-        .thenApplyAsync(reply -> {
-          if (!reply.ok()) {
-            throw new DocumentRepositoryException("Update error: " + reply.error());
-          }
-          return document;
-        });
+    return updateQueue
+        .push(new DocumentUpdateRequest(collection, json.toString(type, document)))
+        .thenApplyAsync(
+            reply -> {
+              if (!reply.ok()) {
+                throw new DocumentRepositoryException("Update error: " + reply.error());
+              }
+              return document;
+            });
   }
 
   @Override
   public CompletableFuture<Void> delete(String id) {
     checkNotNull(id, "id");
-    return deleteQueue.push(new DocumentDeleteRequest(collection, id)).thenApplyAsync(reply -> {
-      if (!reply.ok()) {
-        throw new DocumentRepositoryException("Delete error: " + reply.error());
-      }
-      return null;
-    });
+    return deleteQueue
+        .push(new DocumentDeleteRequest(collection, id))
+        .thenApplyAsync(
+            reply -> {
+              if (!reply.ok()) {
+                throw new DocumentRepositoryException("Delete error: " + reply.error());
+              }
+              return null;
+            });
   }
 
   @Override
@@ -176,13 +206,17 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   }
 
   private LoadingCache<String, D> createCache(RepositoryConfiguration options) {
-    return options.cacheBuilder().build(new CacheLoader<>() {
-      @Override
-      public D load(String key) throws Exception {
-        return findById(key).join()
-            .orElseThrow(() -> new DocumentNotFoundException("Document not found: " + key));
-      }
-    });
+    return options
+        .cacheBuilder()
+        .build(
+            new CacheLoader<>() {
+              @Override
+              public D load(String key) throws Exception {
+                return findById(key)
+                    .join()
+                    .orElseThrow(() -> new DocumentNotFoundException("Document not found: " + key));
+              }
+            });
   }
 
   private void onDocumentUpdatedMessage(DocumentUpdatedMessage message) {

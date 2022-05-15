@@ -9,10 +9,7 @@ import com.jsoniter.annotation.JsonProperty;
  */
 public interface Identifiable<T> {
 
-  /**
-   * Returns the identifier.
-   */
+  /** Returns the identifier. */
   @JsonProperty("_id")
   T id();
-
 }

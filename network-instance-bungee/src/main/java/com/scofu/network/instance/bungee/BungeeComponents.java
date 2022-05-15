@@ -7,9 +7,7 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 
-/**
- * Bungee component utils.
- */
+/** Bungee component utils. */
 public class BungeeComponents {
 
   private BungeeComponents() {}
@@ -18,19 +16,21 @@ public class BungeeComponents {
    * Converts the given components to a base component.
    *
    * @param component the component
-   * @param extra     the extra
+   * @param extra the extra
    */
   public static BaseComponent fromAdventure(Component component, Component... extra) {
     if (extra == null || extra.length == 0) {
-      return new TextComponent(ComponentSerializer.parse(GsonComponentSerializer.gson()
-          .serialize(component)));
+      return new TextComponent(
+          ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(component)));
     }
     var builder = new ComponentBuilder();
-    builder = builder.append(ComponentSerializer.parse(GsonComponentSerializer.gson()
-        .serialize(component)));
+    builder =
+        builder.append(
+            ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(component)));
     for (var extraComponent : extra) {
-      builder = builder.append(ComponentSerializer.parse(GsonComponentSerializer.gson()
-          .serialize(extraComponent)));
+      builder =
+          builder.append(
+              ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(extraComponent)));
     }
     return new TextComponent(builder.create());
   }

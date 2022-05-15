@@ -1,8 +1,6 @@
 package com.scofu.network.document;
 
-/**
- * https://docs.mongodb.com/manual/reference/method/cursor.sort/#cursor.sort--
- */
+/** https://docs.mongodb.com/manual/reference/method/cursor.sort/#cursor.sort-- */
 public interface Sort {
 
   /**
@@ -23,5 +21,4 @@ public interface Sort {
   static Filter by(String field) {
     return by(field, Order.LOWEST_TO_HIGHEST);
   }
-
 }

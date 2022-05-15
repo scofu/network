@@ -3,16 +3,14 @@ package com.scofu.network.document.internal;
 import com.google.common.cache.CacheBuilder;
 import com.scofu.network.document.RepositoryConfiguration;
 
-/**
- * Internal repository configuration.
- */
+/** Internal repository configuration. */
 public class InternalRepositoryConfiguration implements RepositoryConfiguration {
 
   private final String collection;
   private final CacheBuilder<Object, Object> cacheBuilder;
 
-  private InternalRepositoryConfiguration(String collection,
-      CacheBuilder<Object, Object> cacheBuilder) {
+  private InternalRepositoryConfiguration(
+      String collection, CacheBuilder<Object, Object> cacheBuilder) {
     this.collection = collection;
     this.cacheBuilder = cacheBuilder;
   }
@@ -27,9 +25,7 @@ public class InternalRepositoryConfiguration implements RepositoryConfiguration 
     return cacheBuilder;
   }
 
-  /**
-   * Internal builder.
-   */
+  /** Internal builder. */
   public static class Builder implements RepositoryConfiguration.Builder {
 
     private String collection;

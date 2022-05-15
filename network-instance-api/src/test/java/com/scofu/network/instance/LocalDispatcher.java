@@ -16,16 +16,19 @@ final class LocalDispatcher implements Dispatcher {
 
   @Override
   public void dispatchFanout(String topic, byte... message) {
-    messageFlow.handleMessageOrRequest(message).whenComplete((reply, throwable) -> {
-      if (throwable != null) {
-        throwable.printStackTrace();
-        return;
-      }
-      if (reply == null || reply.length == 0) {
-        return;
-      }
-      dispatchFanout(topic, reply);
-    });
+    messageFlow
+        .handleMessageOrRequest(message)
+        .whenComplete(
+            (reply, throwable) -> {
+              if (throwable != null) {
+                throwable.printStackTrace();
+                return;
+              }
+              if (reply == null || reply.length == 0) {
+                return;
+              }
+              dispatchFanout(topic, reply);
+            });
   }
 
   @Override
@@ -34,6 +37,5 @@ final class LocalDispatcher implements Dispatcher {
   }
 
   @Override
-  public void close() throws IOException {
-  }
+  public void close() throws IOException {}
 }

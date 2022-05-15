@@ -6,11 +6,9 @@ final class Types {
 
   private static final TypeLiteral<Void> VOID_TYPE_LITERAL = TypeLiteral.get(Void.TYPE);
 
-  private Types() {
-  }
+  private Types() {}
 
   public static TypeLiteral<Void> voidTypeLiteral() {
     return VOID_TYPE_LITERAL;
   }
-
 }

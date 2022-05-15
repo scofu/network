@@ -14,26 +14,31 @@ final class PlayerCountListener implements Listener, Feature {
   private final LocalInstanceProvider instanceProvider;
 
   @Inject
-  PlayerCountListener(InstanceRepository instanceRepository,
-      LocalInstanceProvider instanceProvider) {
+  PlayerCountListener(
+      InstanceRepository instanceRepository, LocalInstanceProvider instanceProvider) {
     this.instanceRepository = instanceRepository;
     this.instanceProvider = instanceProvider;
   }
 
   @EventHandler
   private void onPlayerJoinEvent(PlayerJoinEvent event) {
-    instanceProvider.get().thenComposeAsync(instance -> {
-      instance.incrementPlayerCount();
-      return instanceRepository.update(instance);
-    });
+    instanceProvider
+        .get()
+        .thenComposeAsync(
+            instance -> {
+              instance.incrementPlayerCount();
+              return instanceRepository.update(instance);
+            });
   }
 
   @EventHandler
   private void onPlayerQuitEvent(PlayerQuitEvent event) {
-    instanceProvider.get().thenComposeAsync(instance -> {
-      instance.decrementPlayerCount();
-      return instanceRepository.update(instance);
-    });
+    instanceProvider
+        .get()
+        .thenComposeAsync(
+            instance -> {
+              instance.decrementPlayerCount();
+              return instanceRepository.update(instance);
+            });
   }
-
 }

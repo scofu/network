@@ -5,15 +5,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * A topic.
- */
+/** A topic. */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Topic {
 
-  /**
-   * Returns the value.
-   */
+  /** Returns the value. */
   String value();
 }

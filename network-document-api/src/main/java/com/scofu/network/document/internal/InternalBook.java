@@ -33,21 +33,22 @@ public class InternalBook<D extends Document> implements Book<D> {
   private final Duration duration;
   private transient long refreshAtMillis;
 
-  private InternalBook(Query query, int documentsPerPage, DocumentRepository<D> repository,
-      Duration duration) {
+  private InternalBook(
+      Query query, int documentsPerPage, DocumentRepository<D> repository, Duration duration) {
     this.query = query;
     this.documentsPerPage = documentsPerPage;
     this.repository = repository;
     this.duration = duration;
-    this.cache = CacheBuilder.newBuilder()
-        .weakValues()
-        .expireAfterAccess(1, TimeUnit.HOURS)
-        .build(createCacheLoader(query, documentsPerPage, repository));
+    this.cache =
+        CacheBuilder.newBuilder()
+            .weakValues()
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build(createCacheLoader(query, documentsPerPage, repository));
     this.refreshAtMillis = Instant.now().plus(duration).toEpochMilli();
   }
 
-  public static <D extends Document> InternalBook<D> newInternalBook(Query query,
-      int documentsPerPage, DocumentRepository<D> repository, Duration duration) {
+  public static <D extends Document> InternalBook<D> newInternalBook(
+      Query query, int documentsPerPage, DocumentRepository<D> repository, Duration duration) {
     return new InternalBook<>(query, documentsPerPage, repository, duration);
   }
 
@@ -84,22 +85,20 @@ public class InternalBook<D extends Document> implements Book<D> {
   }
 
   @Override
-  public void filter(Predicate<Item<D>> predicate) {
-
-  }
+  public void filter(Predicate<Item<D>> predicate) {}
 
   @Override
   public Book<D> withQuery(Function<QueryBuilder, Query> function) {
     return new InternalBook<>(function.apply(query.edit()), documentsPerPage, repository, duration);
   }
 
-  private CacheLoader<Integer, Page<D>> createCacheLoader(Query query, int documentsPerPage,
-      DocumentRepository<D> repository) {
+  private CacheLoader<Integer, Page<D>> createCacheLoader(
+      Query query, int documentsPerPage, DocumentRepository<D> repository) {
     return new CacheLoader<>() {
       @Override
       public Page<D> load(Integer key) throws Exception {
-        return new InternalPage<>(repository, new PageOptions(key, documentsPerPage), query,
-            InternalBook.this);
+        return new InternalPage<>(
+            repository, new PageOptions(key, documentsPerPage), query, InternalBook.this);
       }
     };
   }

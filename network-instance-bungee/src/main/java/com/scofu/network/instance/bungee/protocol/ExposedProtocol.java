@@ -8,9 +8,7 @@ import net.md_5.bungee.protocol.DefinedPacket;
 import net.md_5.bungee.protocol.Protocol;
 import net.md_5.bungee.protocol.ProtocolConstants;
 
-/**
- * Exposed protocol.
- */
+/** Exposed protocol. */
 public class ExposedProtocol {
 
   private static final Method MAPPING_FACTORY_METHOD;
@@ -27,8 +25,10 @@ public class ExposedProtocol {
       toClientField.setAccessible(true);
       TO_CLIENT_DIRECTION_DATA = toClientField.get(Protocol.GAME);
       final var arrayClass = Array.newInstance(PROTOCOL_MAPPING_CLASS, 0).getClass();
-      REGISTER_PACKET_METHOD = TO_CLIENT_DIRECTION_DATA.getClass()
-          .getDeclaredMethod("registerPacket", Class.class, Supplier.class, arrayClass);
+      REGISTER_PACKET_METHOD =
+          TO_CLIENT_DIRECTION_DATA
+              .getClass()
+              .getDeclaredMethod("registerPacket", Class.class, Supplier.class, arrayClass);
       REGISTER_PACKET_METHOD.setAccessible(true);
     } catch (NoSuchMethodException | NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
@@ -38,13 +38,13 @@ public class ExposedProtocol {
   /**
    * Registers a to client packet.
    *
-   * @param type     the type
+   * @param type the type
    * @param supplier the supplier
-   * @param id       the id
-   * @param <T>      the type of the packet
+   * @param id the id
+   * @param <T> the type of the packet
    */
-  public static <T extends DefinedPacket> void registerToClientPacket(Class<T> type,
-      Supplier<? super T> supplier, int id) {
+  public static <T extends DefinedPacket> void registerToClientPacket(
+      Class<T> type, Supplier<? super T> supplier, int id) {
     final var array = (Object[]) Array.newInstance(PROTOCOL_MAPPING_CLASS, 1);
     try {
       array[0] = MAPPING_FACTORY_METHOD.invoke(null, ProtocolConstants.MINECRAFT_1_17, id);

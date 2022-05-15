@@ -3,31 +3,21 @@ package com.scofu.network.document;
 import com.google.common.cache.CacheBuilder;
 import com.scofu.network.document.internal.InternalRepositoryConfiguration;
 
-/**
- * Repository options.
- */
+/** Repository options. */
 public interface RepositoryConfiguration {
 
-  /**
-   * Creates and returns a new builder.
-   */
+  /** Creates and returns a new builder. */
   static Builder builder() {
     return new InternalRepositoryConfiguration.Builder();
   }
 
-  /**
-   * Returns the collection.
-   */
+  /** Returns the collection. */
   String collection();
 
-  /**
-   * Returns the cache builder.
-   */
+  /** Returns the cache builder. */
   CacheBuilder<Object, Object> cacheBuilder();
 
-  /**
-   * Builder.
-   */
+  /** Builder. */
   interface Builder {
 
     /**
@@ -44,9 +34,7 @@ public interface RepositoryConfiguration {
      */
     Builder withCacheBuilder(CacheBuilder<Object, Object> cacheBuilder);
 
-    /**
-     * Builds and returns a new repository configuration.
-     */
+    /** Builds and returns a new repository configuration. */
     RepositoryConfiguration build();
   }
 }

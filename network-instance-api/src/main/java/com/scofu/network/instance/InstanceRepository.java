@@ -19,32 +19,41 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Instance repository.
- */
+/** Instance repository. */
 public class InstanceRepository extends AbstractDocumentRepository<Instance> {
 
   private final MessageQueue messageQueue;
   private final QueueBuilder<InstanceDeployRequest, InstanceDeployReply> deployQueue;
-  private QueueBuilder<InstanceAvailabilityRequest, InstanceAvailabilityReply> availabilityQueue;
   private final QueueBuilder<InstanceConnectRequest, InstanceConnectReply> connectQueue;
+  private QueueBuilder<InstanceAvailabilityRequest, InstanceAvailabilityReply> availabilityQueue;
 
   @Inject
   InstanceRepository(MessageQueue messageQueue, MessageFlow messageFlow, Json json) {
-    super(messageQueue, messageFlow, Instance.class, json, RepositoryConfiguration.builder()
-        .withCollection("scofu.instances")
-        .withCacheBuilder(CacheBuilder.newBuilder())
-        .build());
+    super(
+        messageQueue,
+        messageFlow,
+        Instance.class,
+        json,
+        RepositoryConfiguration.builder()
+            .withCollection("scofu.instances")
+            .withCacheBuilder(CacheBuilder.newBuilder())
+            .build());
     this.messageQueue = messageQueue;
-    this.deployQueue = messageQueue.declareFor(InstanceDeployRequest.class)
-        .expectReply(InstanceDeployReply.class)
-        .withTopic("scofu.instance");
-    this.availabilityQueue = messageQueue.declareFor(InstanceAvailabilityRequest.class)
-        .expectReply(InstanceAvailabilityReply.class)
-        .withTopic("scofu.instance");
-    this.connectQueue = messageQueue.declareFor(InstanceConnectRequest.class)
-        .expectReply(InstanceConnectReply.class)
-        .withTopic("scofu.instance");
+    this.deployQueue =
+        messageQueue
+            .declareFor(InstanceDeployRequest.class)
+            .expectReply(InstanceDeployReply.class)
+            .withTopic("scofu.instance");
+    this.availabilityQueue =
+        messageQueue
+            .declareFor(InstanceAvailabilityRequest.class)
+            .expectReply(InstanceAvailabilityReply.class)
+            .withTopic("scofu.instance");
+    this.connectQueue =
+        messageQueue
+            .declareFor(InstanceConnectRequest.class)
+            .expectReply(InstanceConnectReply.class)
+            .withTopic("scofu.instance");
   }
 
   /**
@@ -60,10 +69,10 @@ public class InstanceRepository extends AbstractDocumentRepository<Instance> {
    * Check availability.
    *
    * @param deployment the deployment
-   * @param context    the context
+   * @param context the context
    */
-  public CompletableFuture<InstanceAvailabilityReply> checkAvailability(Deployment deployment,
-      Map<String, Object> context) {
+  public CompletableFuture<InstanceAvailabilityReply> checkAvailability(
+      Deployment deployment, Map<String, Object> context) {
     return availabilityQueue.push(new InstanceAvailabilityRequest(deployment, context));
   }
 
@@ -71,7 +80,7 @@ public class InstanceRepository extends AbstractDocumentRepository<Instance> {
    * Connect.
    *
    * @param playerIds the player ids
-   * @param instance  the instance
+   * @param instance the instance
    */
   public CompletableFuture<InstanceConnectReply> connect(List<UUID> playerIds, Instance instance) {
     return connectQueue.push(new InstanceConnectRequest(playerIds, instance));

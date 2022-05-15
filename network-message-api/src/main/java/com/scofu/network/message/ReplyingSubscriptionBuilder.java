@@ -9,8 +9,8 @@ import java.util.function.Consumer;
  * @param <T> the type of the message
  * @param <R> the type of the reply ({@link Void} if subscription isn't replying)
  */
-public interface ReplyingSubscriptionBuilder<T, R> extends
-    TopicSubscriptionBuilder<ReplyingSubscriptionBuilder<T, R>> {
+public interface ReplyingSubscriptionBuilder<T, R>
+    extends TopicSubscriptionBuilder<ReplyingSubscriptionBuilder<T, R>> {
 
   /**
    * Sets the consumer for the subscription that receives the message.
@@ -32,5 +32,4 @@ public interface ReplyingSubscriptionBuilder<T, R> extends
    * @param replyType the type of the reply.
    */
   <V> SubscriptionBuilder<T, V> replyWith(Class<V> replyType);
-
 }

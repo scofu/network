@@ -13,8 +13,8 @@ final class InternalReplyingSubscriptionBuilder<T, R> implements ReplyingSubscri
   private final Subscription<T, R> subscription;
   private final Consumer<Subscription<?, ?>> consumer;
 
-  public InternalReplyingSubscriptionBuilder(Subscription<T, R> subscription,
-      Consumer<Subscription<?, ?>> consumer) {
+  public InternalReplyingSubscriptionBuilder(
+      Subscription<T, R> subscription, Consumer<Subscription<?, ?>> consumer) {
     this.subscription = subscription;
     this.consumer = consumer;
   }
@@ -23,7 +23,10 @@ final class InternalReplyingSubscriptionBuilder<T, R> implements ReplyingSubscri
   public void via(Consumer<T> consumer) {
     checkNotNull(consumer, "consumer");
     this.consumer.accept(
-        Subscription.of(subscription.type(), subscription.replyType(), subscription.topics(),
+        Subscription.of(
+            subscription.type(),
+            subscription.replyType(),
+            subscription.topics(),
             ConsumerFunction.wrap(consumer)));
   }
 

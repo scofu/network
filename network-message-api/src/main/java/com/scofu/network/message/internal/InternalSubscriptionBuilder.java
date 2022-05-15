@@ -13,8 +13,8 @@ final class InternalSubscriptionBuilder<T, R> implements SubscriptionBuilder<T, 
   private final Subscription<T, R> subscription;
   private final Consumer<Subscription<?, ?>> consumer;
 
-  public InternalSubscriptionBuilder(Subscription<T, R> subscription,
-      Consumer<Subscription<?, ?>> consumer) {
+  public InternalSubscriptionBuilder(
+      Subscription<T, R> subscription, Consumer<Subscription<?, ?>> consumer) {
     this.subscription = subscription;
     this.consumer = consumer;
   }
@@ -23,8 +23,8 @@ final class InternalSubscriptionBuilder<T, R> implements SubscriptionBuilder<T, 
   public void via(Function<T, CompletableFuture<? extends R>> function) {
     checkNotNull(function, "function");
     consumer.accept(
-        Subscription.of(subscription.type(), subscription.replyType(), subscription.topics(),
-            function));
+        Subscription.of(
+            subscription.type(), subscription.replyType(), subscription.topics(), function));
   }
 
   @Override

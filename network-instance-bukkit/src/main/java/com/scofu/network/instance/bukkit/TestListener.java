@@ -18,5 +18,4 @@ final class TestListener implements Listener, Feature {
   private void onPlayerCommandSendEvent(PlayerCommandSendEvent event) {
     event.getPlayer().sendMessage("event!");
   }
-
 }

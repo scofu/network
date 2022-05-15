@@ -4,9 +4,7 @@ import com.scofu.common.json.lazy.Lazy;
 import com.scofu.network.document.Document;
 import java.net.InetSocketAddress;
 
-/**
- * An instance.
- */
+/** An instance. */
 public interface Instance extends Lazy, Document {
 
   Deployment deployment();
@@ -22,5 +20,4 @@ public interface Instance extends Lazy, Document {
   int decrementPlayerCount();
 
   void setPlayerCount(int playerCount);
-
 }

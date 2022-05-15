@@ -15,9 +15,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 
-/**
- * Resource Pack Listener.
- */
+/** Resource Pack Listener. */
 public final class ResourcePackListener implements Listener, Feature {
 
   private static final String URL =
@@ -33,8 +31,8 @@ public final class ResourcePackListener implements Listener, Feature {
     this.proxyServer = proxyServer;
     this.plugin = plugin;
     this.playersWithResourcePack = Sets.newConcurrentHashSet();
-    ExposedProtocol.registerToClientPacket(ResourcePackSendPacket.class,
-        ResourcePackSendPacket::new, 60);
+    ExposedProtocol.registerToClientPacket(
+        ResourcePackSendPacket.class, ResourcePackSendPacket::new, 60);
   }
 
   /**
@@ -48,15 +46,22 @@ public final class ResourcePackListener implements Listener, Feature {
       return;
     }
     System.out.println("sending resource pack!");
-    proxyServer.getScheduler().schedule(plugin, () -> {
-      if (!event.getPlayer().isConnected()) {
-        return;
-      }
-      playersWithResourcePack.add(event.getPlayer().getUniqueId());
-      event.getPlayer()
-          .unsafe()
-          .sendPacket(new ResourcePackSendPacket(URL, HASH, true, "{\"text\":\"test\"}"));
-    }, 1, TimeUnit.SECONDS);
+    proxyServer
+        .getScheduler()
+        .schedule(
+            plugin,
+            () -> {
+              if (!event.getPlayer().isConnected()) {
+                return;
+              }
+              playersWithResourcePack.add(event.getPlayer().getUniqueId());
+              event
+                  .getPlayer()
+                  .unsafe()
+                  .sendPacket(new ResourcePackSendPacket(URL, HASH, true, "{\"text\":\"test\"}"));
+            },
+            1,
+            TimeUnit.SECONDS);
   }
 
   /**
@@ -68,5 +73,4 @@ public final class ResourcePackListener implements Listener, Feature {
   public void onPlayerDisconnectEvent(PlayerDisconnectEvent event) {
     playersWithResourcePack.remove(event.getPlayer().getUniqueId());
   }
-
 }

@@ -6,9 +6,7 @@ import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
 import com.scofu.network.message.ObservableTopics;
 
-/**
- * Internal message module.
- */
+/** Internal message module. */
 public class InternalMessageModule extends AbstractFeatureModule {
 
   @Override

@@ -1,8 +1,6 @@
 package com.scofu.network.document;
 
-/**
- * Builds queries.
- */
+/** Builds queries. */
 public class QueryBuilder {
 
   private Filter filter;
@@ -17,8 +15,7 @@ public class QueryBuilder {
     this.limit = query.limit();
   }
 
-  QueryBuilder() {
-  }
+  QueryBuilder() {}
 
   /**
    * Sets the filter.
@@ -60,9 +57,7 @@ public class QueryBuilder {
     return this;
   }
 
-  /**
-   * Builds and returns a new query.
-   */
+  /** Builds and returns a new query. */
   public Query build() {
     return new Query(filter, sort, skip, limit);
   }

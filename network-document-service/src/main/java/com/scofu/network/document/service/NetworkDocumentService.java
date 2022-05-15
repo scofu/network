@@ -9,9 +9,7 @@ import com.mongodb.client.MongoDatabase;
 import com.scofu.app.Service;
 import com.scofu.app.bootstrap.BootstrapModule;
 
-/**
- * Network document service.
- */
+/** Network document service. */
 public class NetworkDocumentService extends Service {
 
   public static void main(String[] args) {

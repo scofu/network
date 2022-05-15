@@ -14,15 +14,11 @@ import com.scofu.network.message.Dispatcher;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * Basic network document test.
- */
+/** Basic network document test. */
 public class TestDocumentService extends Service {
 
-  @Inject
-  private NetworkRepository networkRepository;
-  @Inject
-  private LazyFactory lazyFactory;
+  @Inject private NetworkRepository networkRepository;
+  @Inject private LazyFactory lazyFactory;
 
   @Override
   protected void configure() {
@@ -38,10 +34,15 @@ public class TestDocumentService extends Service {
     final var endpointDomain = "test.scofu.com";
     final var image = "docker.scofu.com/test-image";
 
-    networkRepository.update(
-            lazyFactory.create(Network.class, Network::id, id,
+    networkRepository
+        .update(
+            lazyFactory.create(
+                Network.class,
+                Network::id,
+                id,
                 Network::deployments,
-                Map.of(new PeriodEscapedString(endpointDomain),
+                Map.of(
+                    new PeriodEscapedString(endpointDomain),
                     lazyFactory.create(Deployment.class, Deployment::image, image))))
         .join();
     final var network = networkRepository.findById(id).join().orElse(null);

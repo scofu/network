@@ -37,19 +37,23 @@ final class TestDocumentController implements Feature {
   }
 
   private void subscribeToRequests(MessageFlow messageFlow) {
-    messageFlow.subscribeTo(DocumentQueryRequest.class)
+    messageFlow
+        .subscribeTo(DocumentQueryRequest.class)
         .replyWith(DocumentQueryReply.class)
         .withTopic("scofu.document.query.#")
         .via(this::onDocumentQueryRequest);
-    messageFlow.subscribeTo(DocumentCountRequest.class)
+    messageFlow
+        .subscribeTo(DocumentCountRequest.class)
         .replyWith(DocumentCountReply.class)
         .withTopic("scofu.document.count.#")
         .via(this::onDocumentCountRequest);
-    messageFlow.subscribeTo(DocumentUpdateRequest.class)
+    messageFlow
+        .subscribeTo(DocumentUpdateRequest.class)
         .replyWith(DocumentUpdateReply.class)
         .withTopic("scofu.document.update.#")
         .via(this::onDocumentUpdateRequest);
-    messageFlow.subscribeTo(DocumentDeleteRequest.class)
+    messageFlow
+        .subscribeTo(DocumentDeleteRequest.class)
         .replyWith(DocumentDeleteReply.class)
         .withTopic("scofu.document.delete.#")
         .via(this::onDocumentDeleteRequest);
@@ -64,8 +68,10 @@ final class TestDocumentController implements Feature {
       }
       final var sorted = request.query().sort() != null;
       final var expectedSize = request.query().limit() > 0 ? request.query().limit() : 16;
-      final Map<String, String> reply = sorted ? Maps.newLinkedHashMapWithExpectedSize(expectedSize)
-          : Maps.newHashMapWithExpectedSize(expectedSize);
+      final Map<String, String> reply =
+          sorted
+              ? Maps.newLinkedHashMapWithExpectedSize(expectedSize)
+              : Maps.newHashMapWithExpectedSize(expectedSize);
       reply.putAll(collection.documents);
       return completedFuture(new DocumentQueryReply(true, null, reply));
     } catch (Throwable throwable) {
@@ -90,10 +96,12 @@ final class TestDocumentController implements Feature {
       collection = new Collection(Maps.newConcurrentMap());
       database.put(request.collection(), collection);
     }
-    final var document = (Map<String, Object>) json.fromString(
-        new TypeToken<Map<String, Object>>() {}.getType(), request.json());
+    final var document =
+        (Map<String, Object>)
+            json.fromString(new TypeToken<Map<String, Object>>() {}.getType(), request.json());
     collection.documents.put((String) document.get("_id"), request.json());
-    messageQueue.declareFor(DocumentUpdatedMessage.class)
+    messageQueue
+        .declareFor(DocumentUpdatedMessage.class)
         .withTopic("scofu.document.updated." + request.collection())
         .push(new DocumentUpdatedMessage(request.collection(), request.json()));
     return completedFuture(new DocumentUpdateReply(true, null));
@@ -106,7 +114,8 @@ final class TestDocumentController implements Feature {
       return completedFuture(new DocumentDeleteReply(true, null));
     }
     collection.documents.remove(request.id());
-    messageQueue.declareFor(DocumentDeletedMessage.class)
+    messageQueue
+        .declareFor(DocumentDeletedMessage.class)
         .withTopic("scofu.document.deleted." + request.collection())
         .push(new DocumentDeletedMessage(request.collection(), request.id()));
     return completedFuture(new DocumentDeleteReply(true, null));

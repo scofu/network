@@ -5,9 +5,7 @@ import com.scofu.common.inject.AbstractFeatureModule;
 import com.scofu.common.inject.annotation.Module;
 import com.scofu.network.message.Dispatcher;
 
-/**
- * Network rabbitmq message module.
- */
+/** Network rabbitmq message module. */
 @Module
 public class NetworkRabbitMqMessageModule extends AbstractFeatureModule {
 

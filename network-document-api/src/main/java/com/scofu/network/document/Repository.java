@@ -13,9 +13,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface Repository<T, I extends Identifiable<T>> {
 
-  /**
-   * Returns the cache.
-   */
+  /** Returns the cache. */
   Cache<T, I> cache();
 
   /**

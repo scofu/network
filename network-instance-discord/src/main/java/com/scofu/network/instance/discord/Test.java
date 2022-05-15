@@ -45,8 +45,9 @@ final class Test implements Feature {
   @Override
   public void enable() {
     System.out.println("enablus!");
-    client.updatePresence(
-        ClientPresence.of(Status.ONLINE, ClientActivity.watching("www.scofu.com"))).block();
+    client
+        .updatePresence(ClientPresence.of(Status.ONLINE, ClientActivity.watching("www.scofu.com")))
+        .block();
     System.out.println("yo!");
 
     networkRepository.delete("test").join();
@@ -55,13 +56,28 @@ final class Test implements Feature {
     final var networks = networkRepository.find(Query.empty()).thenApply(Map::values).join();
 
     if (networks.isEmpty()) {
-      final var deployment = lazyFactory.create(Deployment.class,
-          Map.of(Deployment::id, "build", Deployment::image, "docker.scofu.com/bukkit-build:latest",
-              Deployment::name, "build", Deployment::environment, Map.of()));
+      final var deployment =
+          lazyFactory.create(
+              Deployment.class,
+              Map.of(
+                  Deployment::id,
+                  "build",
+                  Deployment::image,
+                  "docker.scofu.com/bukkit-build:latest",
+                  Deployment::name,
+                  "build",
+                  Deployment::environment,
+                  Map.of()));
 
-      networkRepository.update(
-          lazyFactory.create(Network.class, Network::id, "build", Network::deployments,
-              Map.of(new PeriodEscapedString("build.scofu.com"), deployment))).join();
+      networkRepository
+          .update(
+              lazyFactory.create(
+                  Network.class,
+                  Network::id,
+                  "build",
+                  Network::deployments,
+                  Map.of(new PeriodEscapedString("build.scofu.com"), deployment)))
+          .join();
     }
 
     final var guildId = Snowflake.of("905343563930427472");
@@ -72,49 +88,74 @@ final class Test implements Feature {
     final var confirmButton = Button.success("network-confirm", "Bekräfta");
     final var cancelButton = Button.danger("network-cancel", "Avbryt");
 
-    client.on(GuildCreateEvent.class).subscribe(event -> {
-      System.out.println("guild create!!");
-      resetChannel(channelId, createButton, deleteButton).subscribe();
-    });
+    client
+        .on(GuildCreateEvent.class)
+        .subscribe(
+            event -> {
+              System.out.println("guild create!!");
+              resetChannel(channelId, createButton, deleteButton).subscribe();
+            });
   }
 
-  private Mono<Message> resetChannel(Snowflake channelId, Button createButton,
-      Button deleteButton) {
-    final var clearMessages = client.getChannelById(channelId)
-        .ofType(GuildMessageChannel.class)
-        .flatMapMany(channel -> {
-          final var messagesBefore = channel.getMessagesBefore(Snowflake.of(Instant.now()));
-          return messagesBefore.count().flatMapMany(count -> {
-            if (count > 2) {
-              return channel.bulkDeleteMessages(messagesBefore);
-            }
-            return messagesBefore.flatMap(Message::delete);
-          });
-        });
-
-    final var sendNetworks = Mono.fromFuture(networkRepository.find(Query.empty()))
-        .flatMap(networks -> client.getChannelById(channelId)
+  private Mono<Message> resetChannel(
+      Snowflake channelId, Button createButton, Button deleteButton) {
+    final var clearMessages =
+        client
+            .getChannelById(channelId)
             .ofType(GuildMessageChannel.class)
-            .flatMap(channel -> {
-              final var builder = MessageCreateSpec.builder()
-                  .content("Visar " + networks.values().size() + " nätverk:");
+            .flatMapMany(
+                channel -> {
+                  final var messagesBefore = channel.getMessagesBefore(Snowflake.of(Instant.now()));
+                  return messagesBefore
+                      .count()
+                      .flatMapMany(
+                          count -> {
+                            if (count > 2) {
+                              return channel.bulkDeleteMessages(messagesBefore);
+                            }
+                            return messagesBefore.flatMap(Message::delete);
+                          });
+                });
 
-              networks.values().forEach(network -> {
-                final var embedBuilder = EmbedCreateSpec.builder();
+    final var sendNetworks =
+        Mono.fromFuture(networkRepository.find(Query.empty()))
+            .flatMap(
+                networks ->
+                    client
+                        .getChannelById(channelId)
+                        .ofType(GuildMessageChannel.class)
+                        .flatMap(
+                            channel -> {
+                              final var builder =
+                                  MessageCreateSpec.builder()
+                                      .content("Visar " + networks.values().size() + " nätverk:");
 
-                embedBuilder.title(network.id())
-                    .description("...")
-                    .addField("Deployments", "-", false);
-                network.deployments()
-                    .forEach(
-                        (id, deployment) -> embedBuilder.addField(Periods.unescape(id.toString()),
-                            deployment.image(), true));
-                builder.addEmbed(embedBuilder.build());
-              });
+                              networks
+                                  .values()
+                                  .forEach(
+                                      network -> {
+                                        final var embedBuilder = EmbedCreateSpec.builder();
 
-              return channel.createMessage(
-                  builder.addComponent(ActionRow.of(createButton, deleteButton)).build());
-            }));
+                                        embedBuilder
+                                            .title(network.id())
+                                            .description("...")
+                                            .addField("Deployments", "-", false);
+                                        network
+                                            .deployments()
+                                            .forEach(
+                                                (id, deployment) ->
+                                                    embedBuilder.addField(
+                                                        Periods.unescape(id.toString()),
+                                                        deployment.image(),
+                                                        true));
+                                        builder.addEmbed(embedBuilder.build());
+                                      });
+
+                              return channel.createMessage(
+                                  builder
+                                      .addComponent(ActionRow.of(createButton, deleteButton))
+                                      .build());
+                            }));
 
     return clearMessages.then(sendNetworks);
   }

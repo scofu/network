@@ -9,9 +9,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.inject.Named;
 
-/**
- * Network instance bukkit module.
- */
+/** Network instance bukkit module. */
 @Module
 public class NetworkInstanceBukkitModule extends AbstractFeatureModule {
 

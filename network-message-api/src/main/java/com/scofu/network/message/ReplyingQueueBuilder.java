@@ -14,7 +14,7 @@ public interface ReplyingQueueBuilder<T, R> extends QueueBuilder<T, R> {
    * Returns a queue builder with the given expected reply.
    *
    * @param replyType the type of the reply
-   * @param <V>       the type of the reply
+   * @param <V> the type of the reply
    */
   <V> QueueBuilder<T, V> expectReply(TypeLiteral<V> replyType);
 
@@ -22,7 +22,7 @@ public interface ReplyingQueueBuilder<T, R> extends QueueBuilder<T, R> {
    * Returns a queue builder with the given expected reply.
    *
    * @param replyType the type of the reply
-   * @param <V>       the type of the reply
+   * @param <V> the type of the reply
    */
   <V> QueueBuilder<T, V> expectReply(Class<V> replyType);
 }

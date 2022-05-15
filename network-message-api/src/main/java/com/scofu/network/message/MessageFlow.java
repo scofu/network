@@ -10,9 +10,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface MessageFlow {
 
-  /**
-   * Returns the topics.
-   */
+  /** Returns the topics. */
   ObservableTopics topics();
 
   /**

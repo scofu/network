@@ -20,11 +20,12 @@ final class ConcurrentKubernetesClient {
   public static ConcurrentKubernetesClient of() {
     final var executorService = Executors.newSingleThreadExecutor();
     var future = new CompletableFuture<ConcurrentKubernetesClient>();
-    executorService.execute(() -> {
-      try (var client = new DefaultKubernetesClient()) {
-        future.complete(new ConcurrentKubernetesClient(client, executorService));
-      }
-    });
+    executorService.execute(
+        () -> {
+          try (var client = new DefaultKubernetesClient()) {
+            future.complete(new ConcurrentKubernetesClient(client, executorService));
+          }
+        });
     return future.join();
   }
 
