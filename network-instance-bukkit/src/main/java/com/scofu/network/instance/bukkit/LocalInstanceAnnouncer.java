@@ -14,7 +14,6 @@ import com.scofu.network.instance.bukkit.event.AvailabilityCheckEvent;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
 import com.scofu.network.message.QueueBuilder;
-import com.scofu.text.ThemeRegistry;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
 import javax.inject.Named;
@@ -28,7 +27,6 @@ final class LocalInstanceAnnouncer implements Feature {
   private final InstanceRepository instanceRepository;
   private final LocalInstanceProvider instanceProvider;
   private final SystemRepository systemRepository;
-  private final ThemeRegistry themeRegistry;
   private final InetAddress localHost;
 
   @Inject
@@ -39,7 +37,6 @@ final class LocalInstanceAnnouncer implements Feature {
       InstanceRepository instanceRepository,
       LocalInstanceProvider instanceProvider,
       SystemRepository systemRepository,
-      ThemeRegistry themeRegistry,
       @Named("LocalHost") InetAddress localHost) {
     this.aliveQueue =
         messageQueue.declareFor(InstanceCreatedMessage.class).withTopic("scofu.instance");
@@ -47,7 +44,6 @@ final class LocalInstanceAnnouncer implements Feature {
     this.instanceRepository = instanceRepository;
     this.instanceProvider = instanceProvider;
     this.systemRepository = systemRepository;
-    this.themeRegistry = themeRegistry;
     this.instanceFuture = new CompletableFuture<>();
     this.localHost = localHost;
     messageFlow
@@ -62,14 +58,7 @@ final class LocalInstanceAnnouncer implements Feature {
     System.out.println("getting instance");
     systemRepository
         .get()
-        .thenComposeAsync(
-            system -> {
-              themeRegistry.setDefaultTheme(
-                  themeRegistry
-                      .byName(system.theme())
-                      .orElseGet(() -> themeRegistry.byName("Vanilla").orElseThrow()));
-              return instanceProvider.get();
-            })
+        .thenComposeAsync(system -> instanceProvider.get())
         .thenAcceptAsync(
             instance -> {
               instanceFuture.complete(instance);

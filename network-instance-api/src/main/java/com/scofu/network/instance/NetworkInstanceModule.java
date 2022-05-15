@@ -15,6 +15,7 @@ public class NetworkInstanceModule extends AbstractFeatureModule {
     bind(NetworkRepository.class).in(Scopes.SINGLETON);
     bind(SystemRepository.class).in(Scopes.SINGLETON);
     bind(FinalEndpointResolver.class).in(Scopes.SINGLETON);
+    bindFeature(SystemThemeHandler.class).in(Scopes.SINGLETON);
     final var endpointResolverMultibinder =
         Multibinder.newSetBinder(binder(), EndpointResolver.class);
     endpointResolverMultibinder

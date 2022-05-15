@@ -8,7 +8,6 @@ import com.scofu.common.inject.Feature;
 import com.scofu.network.instance.Deployment;
 import com.scofu.network.instance.FinalEndpointResolver;
 import com.scofu.network.instance.InstanceRepository;
-import com.scofu.text.ThemeRegistry;
 import java.util.Map;
 import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ProxyServer;
@@ -24,23 +23,21 @@ import net.md_5.bungee.api.event.ServerKickEvent.State;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
-/**
- * Network listener.
- */
+/** Network listener. */
 public final class NetworkListener implements Listener, Feature {
 
   private final InstanceRepository instanceRepository;
   private final ProxyServer proxyServer;
   private final FinalEndpointResolver finalEndpointResolver;
-  private final ThemeRegistry themeRegistry;
 
   @Inject
-  NetworkListener(InstanceRepository instanceRepository, ProxyServer proxyServer,
-      FinalEndpointResolver finalEndpointResolver, ThemeRegistry themeRegistry) {
+  NetworkListener(
+      InstanceRepository instanceRepository,
+      ProxyServer proxyServer,
+      FinalEndpointResolver finalEndpointResolver) {
     this.instanceRepository = instanceRepository;
     this.proxyServer = proxyServer;
     this.finalEndpointResolver = finalEndpointResolver;
-    this.themeRegistry = themeRegistry;
   }
 
   /**
@@ -58,9 +55,8 @@ public final class NetworkListener implements Listener, Feature {
     }
     event.setCancelled(true);
     //    event.setCancelServer(proxyServer.getServerInfo("gateway"));
-    final var serverConnectEvent = new ServerConnectEvent(event.getPlayer(),
-        null,
-        Reason.JOIN_PROXY);
+    final var serverConnectEvent =
+        new ServerConnectEvent(event.getPlayer(), null, Reason.JOIN_PROXY);
     onServerConnectEvent(serverConnectEvent);
     event.setCancelServer(serverConnectEvent.getTarget());
   }
@@ -90,9 +86,13 @@ public final class NetworkListener implements Listener, Feature {
     final var deployment = finalEndpointResolver.resolveDeployment(virtualHost).join().orElse(null);
 
     if (deployment == null) {
-      event.getPlayer()
-          .disconnect(fromAdventure(error().text("Couldn't resolve endpoint %s.",
-              virtualHost.getHostString()).render(themeRegistry.byName("Vanilla").orElseThrow())));
+      event
+          .getPlayer()
+          .disconnect(
+              fromAdventure(
+                  error()
+                      .text("Couldn't resolve endpoint %s.", virtualHost.getHostString())
+                      .render()));
       event.setCancelled(true);
       return;
     }
@@ -103,12 +103,14 @@ public final class NetworkListener implements Listener, Feature {
       return;
     }
 
-    final var availabilityReply = instanceRepository.checkAvailability(deployment,
-        Map.of("slots", 1)).join();
+    final var availabilityReply =
+        instanceRepository.checkAvailability(deployment, Map.of("slots", 1)).join();
     if (!availabilityReply.ok()) {
-      event.getPlayer()
-          .disconnect(fromAdventure(error().text("Availability error: %s",
-              virtualHost.getHostString()).render(themeRegistry.byName("Vanilla").orElseThrow())));
+      event
+          .getPlayer()
+          .disconnect(
+              fromAdventure(
+                  error().text("Availability error: %s", virtualHost.getHostString()).render()));
       event.setCancelled(true);
       return;
     }
@@ -141,27 +143,30 @@ public final class NetworkListener implements Listener, Feature {
       event.getResponse().setDescriptionComponent(new TextComponent(":'("));
       return;
     }
-    event.getResponse()
+    event
+        .getResponse()
         .setDescriptionComponent(fromAdventure(motd.top(), Component.newline(), motd.bottom()));
   }
 
-  private void sendPlayerThroughGatewayForDeployment(ServerConnectEvent event,
-      Deployment deployment) {
+  private void sendPlayerThroughGatewayForDeployment(
+      ServerConnectEvent event, Deployment deployment) {
     event.setTarget(proxyServer.getServerInfo("gateway"));
-    instanceRepository.deploy(deployment).thenAcceptAsync(reply -> {
-      final var player = proxyServer.getPlayer(event.getPlayer().getUniqueId());
-      if (!reply.ok()) {
-        System.out.println("deploy error: " + reply.error());
-        player.sendMessage(fromAdventure(error().text("Error: %s.", reply.error())
-            .render(themeRegistry.byName("Vanilla").orElseThrow())));
-        return;
-      }
-      if (!player.isConnected()) {
-        System.out.println("player left! :(");
-        return;
-      }
-      player.connect(proxyServer.getServerInfo(reply.instance().id()));
-    });
+    instanceRepository
+        .deploy(deployment)
+        .thenAcceptAsync(
+            reply -> {
+              final var player = proxyServer.getPlayer(event.getPlayer().getUniqueId());
+              if (!reply.ok()) {
+                System.out.println("deploy error: " + reply.error());
+                player.sendMessage(
+                    fromAdventure(error().text("Error: %s.", reply.error()).render()));
+                return;
+              }
+              if (!player.isConnected()) {
+                System.out.println("player left! :(");
+                return;
+              }
+              player.connect(proxyServer.getServerInfo(reply.instance().id()));
+            });
   }
-
 }
