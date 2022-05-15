@@ -6,6 +6,7 @@ import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.text.Characters;
+import com.scofu.text.Color;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Optional;
@@ -51,7 +52,7 @@ final class TestDynamicEndpointResolver implements EndpointResolver {
   }
 
   private Motd createMotd(String target) {
-    final var top = text("Scofu Network");
+    final var top = text("Scofu Network").color(Color.BRIGHT_GREEN);
     final var bottom = entry("dynamic -> %s", target);
     return lazyFactory.create(
         Motd.class,
