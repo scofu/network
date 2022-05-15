@@ -39,6 +39,13 @@ public class SystemRepository extends AbstractDocumentRepository<System> {
                 system
                     .map(CompletableFuture::completedFuture)
                     .orElseGet(
-                        () -> update(lazyFactory.create(System.class, System::theme, "Vanilla"))));
+                        () ->
+                            update(
+                                lazyFactory.create(
+                                    System.class,
+                                    System::id,
+                                    System.ID,
+                                    System::theme,
+                                    "Vanilla"))));
   }
 }
