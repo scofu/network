@@ -4,6 +4,8 @@ import com.google.common.cache.Cache;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Represents a repository of identifiable objects.
@@ -35,6 +37,18 @@ public interface Repository<T, I extends Identifiable<T>> {
    * @param id the identifier
    */
   CompletableFuture<Optional<I>> byIdAsync(T id);
+
+  /**
+   * Returns an optional object, either the first one in the cache matching the given filter, or the
+   * first one matching the given query.
+   *
+   * <p>If it is queried and matched there, it will be cached.
+   *
+   * @param filter the filter
+   * @param querySupplier the query supplier
+   */
+  CompletableFuture<Optional<I>> fromCacheOrQuery(
+      Predicate<I> filter, Supplier<Query> querySupplier);
 
   /**
    * Creates a new request with the given query.

@@ -30,6 +30,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -131,6 +133,30 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
                       cache.put(id, document);
                       return document;
                     }));
+  }
+
+  @Override
+  public CompletableFuture<Optional<D>> fromCacheOrQuery(
+      Predicate<D> filter, Supplier<Query> querySupplier) {
+    checkNotNull(filter, "filter");
+    checkNotNull(querySupplier, "querySupplier");
+    return cache.asMap().values().stream()
+        .filter(filter)
+        .findFirst()
+        .map(Optional::of)
+        .map(CompletableFuture::completedFuture)
+        .orElseGet(
+            () ->
+                find(querySupplier.get())
+                    .thenApplyAsync(
+                        map ->
+                            map.values().stream()
+                                .findFirst()
+                                .map(
+                                    document -> {
+                                      cache.put(document.id(), document);
+                                      return document;
+                                    })));
   }
 
   @Override
