@@ -6,6 +6,7 @@ import static com.scofu.network.document.Filter.where;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.scofu.common.json.Json;
+import com.scofu.common.json.PeriodEscapedString;
 import com.scofu.common.json.Periods;
 import com.scofu.network.document.AbstractDocumentRepository;
 import com.scofu.network.document.Query;
@@ -41,10 +42,13 @@ public class NetworkRepository extends AbstractDocumentRepository<Network> {
    * @param domain the domain
    */
   public CompletableFuture<Optional<Network>> findByDomain(String domain) {
-    return find(Query.builder()
-            .filter(where("deployments." + Periods.escape(domain), exists(true)))
-            .limitTo(1)
-            .build())
-        .thenApply(map -> map.values().stream().findFirst());
+    final var escapedDomain = new PeriodEscapedString(domain);
+    return fromCacheOrQuery(
+        network -> network.deployments().containsKey(escapedDomain),
+        () ->
+            Query.builder()
+                .filter(where("deployments." + Periods.escape(domain), exists(true)))
+                .limitTo(1)
+                .build());
   }
 }
