@@ -23,6 +23,8 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
@@ -79,7 +81,12 @@ final class InstanceController implements Feature {
         .addNewContainer()
         .withName("container")
         .withImagePullPolicy("Always")
+        .withVolumeMounts(new VolumeMountBuilder()
+                .withName("shareclasses").withMountPath("/opt/shareclasses").build())
         .endContainer()
+        .withVolumes(new VolumeBuilder()
+            .withName("shareclasses")
+            .withNewHostPath("/mnt/disks/share", "DirectoryOrCreate").build())
         .withImagePullSecrets(new LocalObjectReference("scofu-docker-hosted-test"))
         .withRestartPolicy("Never")
         .endSpec()
