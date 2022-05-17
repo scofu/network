@@ -202,7 +202,9 @@ final class InstanceController implements Feature {
                                     });
                               }
 
-                              default -> {}
+                              default -> {
+
+                              }
                             }
                           }
 
