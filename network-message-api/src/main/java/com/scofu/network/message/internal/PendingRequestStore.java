@@ -30,6 +30,10 @@ final class PendingRequestStore {
     return Optional.ofNullable(requests.remove(requestId));
   }
 
+  public void invalidate(String requestId) {
+    requests.remove(requestId);
+  }
+
   private String generateRequestId(int size) {
     final var bytes = new byte[size];
     secureRandom.nextBytes(bytes);

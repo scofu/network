@@ -8,7 +8,7 @@ public record Query(Filter filter, Filter sort, int skip, int limit) {
   /**
    * Creates and returns a new builder.
    */
-  public static QueryBuilder builder() {
+  public static QueryBuilder query() {
     return new QueryBuilder();
   }
 

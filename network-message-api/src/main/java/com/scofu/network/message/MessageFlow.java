@@ -20,7 +20,7 @@ public interface MessageFlow {
    */
   CompletableFuture<byte[]> handleMessageOrRequest(byte... message);
 
-  <T> ReplyingSubscriptionBuilder<T, Void> subscribeTo(TypeLiteral<T> type);
+  <T> ReplyingSubscription<T, Void> subscribeTo(TypeLiteral<T> type);
 
-  <T> ReplyingSubscriptionBuilder<T, Void> subscribeTo(Class<T> type);
+  <T> ReplyingSubscription<T, Void> subscribeTo(Class<T> type);
 }

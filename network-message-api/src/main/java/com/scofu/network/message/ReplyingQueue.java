@@ -8,7 +8,7 @@ import com.google.inject.TypeLiteral;
  * @param <T> the type of the message
  * @param <R> the type of the expected reply ({@link Void} if no reply is expected)
  */
-public interface ReplyingQueueBuilder<T, R> extends QueueBuilder<T, R> {
+public interface ReplyingQueue<T, R> extends Queue<T, R> {
 
   /**
    * Returns a queue builder with the given expected reply.
@@ -16,7 +16,7 @@ public interface ReplyingQueueBuilder<T, R> extends QueueBuilder<T, R> {
    * @param replyType the type of the reply
    * @param <V> the type of the reply
    */
-  <V> QueueBuilder<T, V> expectReply(TypeLiteral<V> replyType);
+  <V> Queue<T, V> expectReply(TypeLiteral<V> replyType);
 
   /**
    * Returns a queue builder with the given expected reply.
@@ -24,5 +24,5 @@ public interface ReplyingQueueBuilder<T, R> extends QueueBuilder<T, R> {
    * @param replyType the type of the reply
    * @param <V> the type of the reply
    */
-  <V> QueueBuilder<T, V> expectReply(Class<V> replyType);
+  <V> Queue<T, V> expectReply(Class<V> replyType);
 }

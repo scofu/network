@@ -8,7 +8,7 @@ import com.scofu.network.document.AbstractDocumentRepository;
 import com.scofu.network.document.RepositoryConfiguration;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
-import java.util.concurrent.CompletableFuture;
+import com.scofu.network.message.Result;
 import java.util.concurrent.TimeUnit;
 
 /** System repository. */
@@ -32,20 +32,13 @@ public class SystemRepository extends AbstractDocumentRepository<System> {
   }
 
   /** Returns the system. */
-  public CompletableFuture<System> get() {
+  public Result<System> get() {
     return this.byIdAsync(System.ID)
-        .thenComposeAsync(
-            system ->
-                system
-                    .map(CompletableFuture::completedFuture)
-                    .orElseGet(
-                        () ->
-                            update(
-                                lazyFactory.create(
-                                    System.class,
-                                    System::id,
-                                    System.ID,
-                                    System::theme,
-                                    "Vanilla"))));
+        .flatMap(system -> system.map(Result::of).orElseGet(this::createAndUpdateDefaultSystem));
+  }
+
+  private Result<System> createAndUpdateDefaultSystem() {
+    return update(
+        lazyFactory.create(System.class, System::id, System.ID, System::theme, "Vanilla"));
   }
 }

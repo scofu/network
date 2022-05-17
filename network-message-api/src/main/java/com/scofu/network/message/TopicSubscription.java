@@ -1,11 +1,11 @@
 package com.scofu.network.message;
 
 /**
- * Forwarded builder for {@link ReplyingSubscriptionBuilder} and {@link SubscriptionBuilder}.
+ * Forwarded builder for {@link ReplyingSubscription} and {@link Subscription}.
  *
  * @param <S> the type of the parent builder
  */
-public interface TopicSubscriptionBuilder<S> {
+public interface TopicSubscription<S> {
 
   /**
    * Adds the given topic.

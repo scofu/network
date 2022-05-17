@@ -5,13 +5,13 @@ import static com.scofu.text.EntryComponent.entry;
 import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.lazy.LazyFactory;
+import com.scofu.network.message.Result;
 import com.scofu.text.Characters;
 import com.scofu.text.Color;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 /** Final endpoint resolver. */
@@ -27,8 +27,8 @@ public class FinalEndpointResolver implements EndpointResolver {
   }
 
   @Override
-  public CompletableFuture<Optional<Deployment>> resolveDeployment(InetSocketAddress address) {
-    return CompletableFuture.supplyAsync(
+  public Result<Optional<Deployment>> resolveDeployment(InetSocketAddress address) {
+    return Result.of(
         () ->
             resolvers.stream()
                 .map(endpointResolver -> endpointResolver.resolveDeployment(address).join())
@@ -38,8 +38,8 @@ public class FinalEndpointResolver implements EndpointResolver {
   }
 
   @Override
-  public CompletableFuture<Optional<Motd>> resolveMotd(InetSocketAddress address) {
-    return CompletableFuture.supplyAsync(
+  public Result<Optional<Motd>> resolveMotd(InetSocketAddress address) {
+    return Result.of(
         () ->
             resolvers.stream()
                 .map(endpointResolver -> endpointResolver.resolveMotd(address).join())

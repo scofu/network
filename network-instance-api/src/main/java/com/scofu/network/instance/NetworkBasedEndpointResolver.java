@@ -6,6 +6,7 @@ import static net.kyori.adventure.text.Component.text;
 
 import com.scofu.common.json.PeriodEscapedString;
 import com.scofu.common.json.lazy.LazyFactory;
+import com.scofu.network.message.Result;
 import com.scofu.text.Characters;
 import com.scofu.text.Color;
 import java.net.InetSocketAddress;
@@ -27,18 +28,18 @@ final class NetworkBasedEndpointResolver implements EndpointResolver {
   }
 
   @Override
-  public CompletableFuture<Optional<Deployment>> resolveDeployment(InetSocketAddress address) {
+  public Result<Optional<Deployment>> resolveDeployment(InetSocketAddress address) {
     final var domain = address.getHostString().replaceFirst("mc\\.", "");
     return networkRepository
         .findByDomain(domain)
-        .thenApplyAsync(
+        .map(
             o -> o.map(network -> network.deployments().get(new PeriodEscapedString(domain))));
   }
 
   @Override
-  public CompletableFuture<Optional<Motd>> resolveMotd(InetSocketAddress address) {
+  public Result<Optional<Motd>> resolveMotd(InetSocketAddress address) {
     final var domain = address.getHostString().replaceFirst("mc\\.", "");
-    return networkRepository.findByDomain(domain).thenApplyAsync(o -> o.map(this::createMotd));
+    return networkRepository.findByDomain(domain).map(o -> o.map(this::createMotd));
   }
 
   private Motd createMotd(Network network) {

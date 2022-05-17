@@ -16,7 +16,8 @@ import com.scofu.common.json.Json;
 import com.scofu.common.json.TypeCache;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.ObservableTopics;
-import com.scofu.network.message.ReplyingSubscriptionBuilder;
+import com.scofu.network.message.ReplyingSubscription;
+import com.scofu.network.message.Result;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
@@ -74,14 +75,14 @@ final class InternalMessageFlow implements MessageFlow {
   }
 
   @Override
-  public <T> ReplyingSubscriptionBuilder<T, Void> subscribeTo(TypeLiteral<T> type) {
+  public <T> ReplyingSubscription<T, Void> subscribeTo(TypeLiteral<T> type) {
     checkNotNull(type, "type");
-    return new InternalReplyingSubscriptionBuilder<>(
-        Subscription.of(type, null, new HashSet<>(), null), this::subscribe);
+    return new InternalReplyingSubscription<>(
+        SubscriptionKey.of(type, null, new HashSet<>(), null), this::subscribe);
   }
 
   @Override
-  public <T> ReplyingSubscriptionBuilder<T, Void> subscribeTo(Class<T> type) {
+  public <T> ReplyingSubscription<T, Void> subscribeTo(Class<T> type) {
     checkNotNull(type, "type");
     return subscribeTo(TypeLiteral.get(type));
   }
@@ -96,17 +97,17 @@ final class InternalMessageFlow implements MessageFlow {
         .toString();
   }
 
-  private <T, R> void subscribe(Subscription<T, R> subscription) {
+  private <T, R> void subscribe(SubscriptionKey<T, R> subscriptionKey) {
     final var key =
-        typeCache.asString(subscription.type().getType())
-            + (subscription.replyType() == null
+        typeCache.asString(subscriptionKey.type().getType())
+            + (subscriptionKey.replyType() == null
                 ? ""
-                : typeCache.asString(subscription.replyType().getType()));
-    subscriptions.put(key, subscription.function());
-    if (subscription.topics().isEmpty()) {
-      subscription.topics().add("global");
+                : typeCache.asString(subscriptionKey.replyType().getType()));
+    subscriptions.put(key, subscriptionKey.function());
+    if (subscriptionKey.topics().isEmpty()) {
+      subscriptionKey.topics().add("global");
     }
-    observableTopics.addAll(subscription.topics());
+    observableTopics.addAll(subscriptionKey.topics());
   }
 
   private void completeRequest(Payload payload) {
@@ -119,21 +120,19 @@ final class InternalMessageFlow implements MessageFlow {
     final var key =
         payload.message().type() + (payload.reply() == null ? "" : payload.reply().type());
     final var subscriptions = this.subscriptions.get(key);
-    final var hasSubscription = subscriptions != null && !subscriptions.isEmpty();
-    if (!hasSubscription) {
+    if (subscriptions == null || subscriptions.isEmpty()) {
       return completedFuture(null);
     }
     System.out.println("1key = " + key);
     System.out.println("1subscriptions = " + subscriptions.stream().toList());
-
     return supplyAsync(
         () -> {
           final var message = payload.message().value();
           for (var subscription : subscriptions) {
             final var reply =
                 (byte[])
-                    ((CompletableFuture) subscription.apply(message))
-                        .thenApply(resolved -> serializePayload(payload, resolved))
+                    ((Result) subscription.apply(message))
+                        .map(resolved -> serializePayload(payload, resolved))
                         .join();
             if (reply != null) {
               return reply;

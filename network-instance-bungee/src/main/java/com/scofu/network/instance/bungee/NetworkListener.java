@@ -153,7 +153,7 @@ public final class NetworkListener implements Listener, Feature {
     event.setTarget(proxyServer.getServerInfo("gateway"));
     instanceRepository
         .deploy(deployment)
-        .thenAcceptAsync(
+        .accept(
             reply -> {
               final var player = proxyServer.getPlayer(event.getPlayer().getUniqueId());
               if (!reply.ok()) {

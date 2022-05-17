@@ -17,7 +17,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 final class InternalPage<D extends Document> implements Page<D> {
 
@@ -73,15 +75,8 @@ final class InternalPage<D extends Document> implements Page<D> {
         final var index = new AtomicInteger(key.options.documentsToSkip());
         return repository
             .find(key.query)
-            .thenApply(
-                map ->
-                    map.values().stream()
-                        .collect(
-                            Collectors.toMap(
-                                Function.identity(),
-                                d -> index.getAndIncrement(),
-                                (x, y) -> x,
-                                Maps::newLinkedHashMap)))
+            .map(map -> map.values().stream())
+            .apply(Stream::collect, () -> toLinkedMap(index))
             .join();
       }
     };
@@ -89,4 +84,9 @@ final class InternalPage<D extends Document> implements Page<D> {
 
   /** Key that pairs options with query. */
   public record Key(PageOptions options, Query query) {}
+
+  private Collector<D, ?, Map<D, Integer>> toLinkedMap(AtomicInteger index) {
+    return Collectors.toMap(
+        Function.identity(), d -> index.getAndIncrement(), (x, y) -> x, Maps::newLinkedHashMap);
+  }
 }

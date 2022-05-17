@@ -2,7 +2,6 @@ package com.scofu.network.document;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.scofu.network.document.Filter.where;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -22,13 +21,13 @@ import com.scofu.network.document.api.DocumentUpdateRequest;
 import com.scofu.network.document.api.DocumentUpdatedMessage;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
-import com.scofu.network.message.QueueBuilder;
+import com.scofu.network.message.Queue;
+import com.scofu.network.message.Result;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -44,10 +43,10 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   private final String collection;
   private final Type type;
   private final Json json;
-  private final QueueBuilder<DocumentQueryRequest, DocumentQueryReply> findQueue;
-  private final QueueBuilder<DocumentCountRequest, DocumentCountReply> countQueue;
-  private final QueueBuilder<DocumentUpdateRequest, DocumentUpdateReply> updateQueue;
-  private final QueueBuilder<DocumentDeleteRequest, DocumentDeleteReply> deleteQueue;
+  private final Queue<DocumentQueryRequest, DocumentQueryReply> findQueue;
+  private final Queue<DocumentCountRequest, DocumentCountReply> countQueue;
+  private final Queue<DocumentUpdateRequest, DocumentUpdateReply> updateQueue;
+  private final Queue<DocumentDeleteRequest, DocumentDeleteReply> deleteQueue;
   private final LoadingCache<String, D> cache;
   private final List<DocumentStateListener<D>> stateListeners;
 
@@ -120,13 +119,13 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   }
 
   @Override
-  public CompletableFuture<Optional<D>> byIdAsync(String id) {
+  public Result<Optional<D>> byIdAsync(String id) {
     checkNotNull(id, "id");
     if (cache.asMap().containsKey(id)) {
-      return completedFuture(Optional.of(cache.asMap().get(id)));
+      return Result.of(Optional.of(cache.asMap().get(id)));
     }
     return findById(id)
-        .thenApplyAsync(
+        .map(
             optional ->
                 optional.map(
                     document -> {
@@ -136,19 +135,18 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   }
 
   @Override
-  public CompletableFuture<Optional<D>> fromCacheOrQuery(
-      Predicate<D> filter, Supplier<Query> querySupplier) {
+  public Result<Optional<D>> fromCacheOrQuery(Predicate<D> filter, Supplier<Query> querySupplier) {
     checkNotNull(filter, "filter");
     checkNotNull(querySupplier, "querySupplier");
     return cache.asMap().values().stream()
         .filter(filter)
         .findFirst()
         .map(Optional::of)
-        .map(CompletableFuture::completedFuture)
+        .map(Result::of)
         .orElseGet(
             () ->
                 find(querySupplier.get())
-                    .thenApplyAsync(
+                    .map(
                         map ->
                             map.values().stream()
                                 .findFirst()
@@ -160,10 +158,10 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   }
 
   @Override
-  public CompletableFuture<Map<String, D>> find(Query query) {
+  public Result<Map<String, D>> find(Query query) {
     return findQueue
         .push(new DocumentQueryRequest(collection, query))
-        .thenApplyAsync(
+        .map(
             reply -> {
               if (!reply.ok()) {
                 throw new DocumentQueryException("Query error: " + reply.error());
@@ -179,16 +177,16 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   }
 
   @Override
-  public CompletableFuture<Optional<D>> findById(String id) {
-    return find(Query.builder().filter(where("_id", id)).limitTo(1).build())
-        .thenApplyAsync(documents -> documents.values().stream().findFirst());
+  public Result<Optional<D>> findById(String id) {
+    return find(Query.query().filter(where("_id", id)).limitTo(1).build())
+        .map(documents -> documents.values().stream().findFirst());
   }
 
   @Override
-  public CompletableFuture<Long> count(Query query) {
+  public Result<Long> count(Query query) {
     return countQueue
         .push(new DocumentCountRequest(collection, query))
-        .thenApplyAsync(
+        .map(
             reply -> {
               if (!reply.ok()) {
                 throw new DocumentQueryException("Count error: " + reply.error());
@@ -198,12 +196,12 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   }
 
   @Override
-  public CompletableFuture<D> update(D document) {
+  public Result<D> update(D document) {
     checkNotNull(document, "document");
     cache.put(document.id(), document);
     return updateQueue
         .push(new DocumentUpdateRequest(collection, json.toString(type, document)))
-        .thenApplyAsync(
+        .map(
             reply -> {
               if (!reply.ok()) {
                 throw new DocumentRepositoryException("Update error: " + reply.error());
@@ -213,11 +211,11 @@ public class AbstractDocumentRepository<D extends Document> implements DocumentR
   }
 
   @Override
-  public CompletableFuture<Void> delete(String id) {
+  public Result<Void> delete(String id) {
     checkNotNull(id, "id");
     return deleteQueue
         .push(new DocumentDeleteRequest(collection, id))
-        .thenApplyAsync(
+        .map(
             reply -> {
               if (!reply.ok()) {
                 throw new DocumentRepositoryException("Delete error: " + reply.error());

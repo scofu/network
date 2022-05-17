@@ -30,7 +30,7 @@ final class SystemThemeHandler implements Feature {
   public void enable() {
     systemRepository
         .get()
-        .thenComposeAsync(
+        .flatMap(
             system -> {
               themeRegistry.setDefaultTheme(
                   themeRegistry

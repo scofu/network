@@ -2,6 +2,7 @@ package com.scofu.network.instance;
 
 import static com.scofu.network.document.Filter.exists;
 import static com.scofu.network.document.Filter.where;
+import static com.scofu.network.document.Query.query;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
@@ -9,12 +10,11 @@ import com.scofu.common.json.Json;
 import com.scofu.common.json.PeriodEscapedString;
 import com.scofu.common.json.Periods;
 import com.scofu.network.document.AbstractDocumentRepository;
-import com.scofu.network.document.Query;
 import com.scofu.network.document.RepositoryConfiguration;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
+import com.scofu.network.message.Result;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /** Network repository. */
@@ -41,12 +41,12 @@ public class NetworkRepository extends AbstractDocumentRepository<Network> {
    *
    * @param domain the domain
    */
-  public CompletableFuture<Optional<Network>> findByDomain(String domain) {
+  public Result<Optional<Network>> findByDomain(String domain) {
     final var escapedDomain = new PeriodEscapedString(domain);
     return fromCacheOrQuery(
         network -> network.deployments().containsKey(escapedDomain),
         () ->
-            Query.builder()
+            query()
                 .filter(where("deployments." + Periods.escape(domain), exists(true)))
                 .limitTo(1)
                 .build());

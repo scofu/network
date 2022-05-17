@@ -1,7 +1,5 @@
 package com.scofu.network.document.service;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.mongodb.client.MongoDatabase;
@@ -22,8 +20,8 @@ import com.scofu.network.document.api.DocumentUpdateRequest;
 import com.scofu.network.document.api.DocumentUpdatedMessage;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
+import com.scofu.network.message.Result;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -66,8 +64,7 @@ final class DocumentController implements Feature {
         .via(this::onDocumentDeleteRequest);
   }
 
-  private CompletableFuture<DocumentQueryReply> onDocumentQueryRequest(
-      DocumentQueryRequest request) {
+  private Result<DocumentQueryReply> onDocumentQueryRequest(DocumentQueryRequest request) {
     try {
       final var collection = mongoDatabase.getCollection(request.collection());
       final var sorted = request.query().sort() != null;
@@ -94,28 +91,26 @@ final class DocumentController implements Feature {
           (Consumer<? super Document>)
               document ->
                   reply.put(document.getString("_id"), json.toString(Bson.class, document)));
-      return completedFuture(new DocumentQueryReply(true, null, reply));
+      return Result.of(new DocumentQueryReply(true, null, reply));
     } catch (Throwable throwable) {
       throwable.printStackTrace();
       System.out.println("EROR");
       System.out.println(throwable);
       System.out.println(throwable.getCause());
-      return completedFuture(new DocumentQueryReply(false, "Error", Map.of()));
+      return Result.of(new DocumentQueryReply(false, "Error", Map.of()));
     }
   }
 
-  private CompletableFuture<DocumentCountReply> onDocumentCountRequest(
-      DocumentCountRequest request) {
+  private Result<DocumentCountReply> onDocumentCountRequest(DocumentCountRequest request) {
     final var collection = mongoDatabase.getCollection(request.collection());
     final var count =
         request.query().filter() == null
             ? collection.countDocuments()
             : collection.countDocuments(new Document(request.query().filter().asMap()));
-    return completedFuture(new DocumentCountReply(true, null, count));
+    return Result.of(new DocumentCountReply(true, null, count));
   }
 
-  private CompletableFuture<DocumentUpdateReply> onDocumentUpdateRequest(
-      DocumentUpdateRequest request) {
+  private Result<DocumentUpdateReply> onDocumentUpdateRequest(DocumentUpdateRequest request) {
     final var collection = mongoDatabase.getCollection(request.collection());
     final var document = (Document) json.fromString(Bson.class, request.json());
     final UpdateResult result;
@@ -127,31 +122,28 @@ final class DocumentController implements Feature {
               new ReplaceOptions().upsert(true));
     } catch (Throwable throwable) {
       throwable.printStackTrace();
-      return completedFuture(new DocumentUpdateReply(false, "Error"));
+      return Result.of(new DocumentUpdateReply(false, "Error"));
     }
     if (!result.wasAcknowledged()) {
-      return completedFuture(
-          new DocumentUpdateReply(false, "Database did not acknowledge update."));
+      return Result.of(new DocumentUpdateReply(false, "Database did not acknowledge update."));
     }
     messageQueue
         .declareFor(DocumentUpdatedMessage.class)
         .withTopic("scofu.document.updated." + request.collection())
         .push(new DocumentUpdatedMessage(request.collection(), request.json()));
-    return completedFuture(new DocumentUpdateReply(true, null));
+    return Result.of(new DocumentUpdateReply(true, null));
   }
 
-  private CompletableFuture<DocumentDeleteReply> onDocumentDeleteRequest(
-      DocumentDeleteRequest request) {
+  private Result<DocumentDeleteReply> onDocumentDeleteRequest(DocumentDeleteRequest request) {
     final var collection = mongoDatabase.getCollection(request.collection());
     final var result = collection.deleteOne(Filters.eq("_id", request.id()));
     if (!result.wasAcknowledged()) {
-      return completedFuture(
-          new DocumentDeleteReply(false, "Database did not acknowledge deletion."));
+      return Result.of(new DocumentDeleteReply(false, "Database did not acknowledge deletion."));
     }
     messageQueue
         .declareFor(DocumentDeletedMessage.class)
         .withTopic("scofu.document.deleted." + request.collection())
         .push(new DocumentDeletedMessage(request.collection(), request.id()));
-    return completedFuture(new DocumentDeleteReply(true, null));
+    return Result.of(new DocumentDeleteReply(true, null));
   }
 }

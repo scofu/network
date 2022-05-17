@@ -1,6 +1,7 @@
 package com.scofu.network.document;
 
 import com.google.common.cache.Cache;
+import com.scofu.network.message.Result;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -36,7 +37,7 @@ public interface Repository<T, I extends Identifiable<T>> {
    *
    * @param id the identifier
    */
-  CompletableFuture<Optional<I>> byIdAsync(T id);
+  Result<Optional<I>> byIdAsync(T id);
 
   /**
    * Returns an optional object, either the first one in the cache matching the given filter, or the
@@ -47,7 +48,7 @@ public interface Repository<T, I extends Identifiable<T>> {
    * @param filter the filter
    * @param querySupplier the query supplier
    */
-  CompletableFuture<Optional<I>> fromCacheOrQuery(
+  Result<Optional<I>> fromCacheOrQuery(
       Predicate<I> filter, Supplier<Query> querySupplier);
 
   /**
@@ -57,7 +58,7 @@ public interface Repository<T, I extends Identifiable<T>> {
    *
    * @param query the query
    */
-  CompletableFuture<Map<String, I>> find(Query query);
+  Result<Map<String, I>> find(Query query);
 
   /**
    * Queries for any object with the given identifier.
@@ -66,14 +67,14 @@ public interface Repository<T, I extends Identifiable<T>> {
    *
    * @param id the identifier
    */
-  CompletableFuture<Optional<I>> findById(T id);
+  Result<Optional<I>> findById(T id);
 
   /**
    * Requests the amount of objects matching the given query.
    *
    * @param query the query
    */
-  CompletableFuture<Long> count(Query query);
+  Result<Long> count(Query query);
 
   /**
    * Updates the given object.
@@ -82,7 +83,7 @@ public interface Repository<T, I extends Identifiable<T>> {
    *
    * @param i the object
    */
-  CompletableFuture<I> update(I i);
+  Result<I> update(I i);
 
   /**
    * Deletes any object with the given identifier.
@@ -91,5 +92,5 @@ public interface Repository<T, I extends Identifiable<T>> {
    *
    * @param id the identifier
    */
-  CompletableFuture<Void> delete(T id);
+  Result<Void> delete(T id);
 }

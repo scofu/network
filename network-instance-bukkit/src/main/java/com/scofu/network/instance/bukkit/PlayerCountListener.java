@@ -24,7 +24,7 @@ final class PlayerCountListener implements Listener, Feature {
   private void onPlayerJoinEvent(PlayerJoinEvent event) {
     instanceProvider
         .get()
-        .thenComposeAsync(
+        .flatMap(
             instance -> {
               instance.incrementPlayerCount();
               return instanceRepository.update(instance);
@@ -35,7 +35,7 @@ final class PlayerCountListener implements Listener, Feature {
   private void onPlayerQuitEvent(PlayerQuitEvent event) {
     instanceProvider
         .get()
-        .thenComposeAsync(
+        .flatMap(
             instance -> {
               instance.decrementPlayerCount();
               return instanceRepository.update(instance);

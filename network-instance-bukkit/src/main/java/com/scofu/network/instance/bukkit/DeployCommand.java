@@ -11,6 +11,7 @@ import com.scofu.common.inject.Feature;
 import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.network.instance.Deployment;
 import com.scofu.network.instance.InstanceRepository;
+import com.scofu.network.message.Result;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -48,7 +49,8 @@ final class DeployCommand implements Feature {
     info().text("Deploying...").prefixed().render(player::sendMessage);
     instanceRepository
         .deploy(deployment)
-        .thenAcceptAsync(
+        .filter(x -> player.isOnline())
+        .flatMap(
             reply -> {
               if (!reply.ok()) {
                 System.out.println("deploy error: " + reply.error());
@@ -56,25 +58,20 @@ final class DeployCommand implements Feature {
                     .text("Error deploying: %s.", reply.error())
                     .prefixed()
                     .render(player::sendMessage);
-                return;
+                return Result.empty();
               }
-              if (!player.isOnline()) {
-                System.out.println("player left! :(");
-                return;
+              return instanceRepository.connect(List.of(player.getUniqueId()), reply.instance());
+            })
+        .filterNotEmpty()
+        .accept(
+            reply -> {
+              if (!reply.ok()) {
+                System.out.println("connect error: " + reply.error());
+                error()
+                    .text("Error connecting: %s.", reply.error())
+                    .prefixed()
+                    .render(player::sendMessage);
               }
-              info().text("Connecting...").prefixed().render(player::sendMessage);
-              instanceRepository
-                  .connect(List.of(player.getUniqueId()), reply.instance())
-                  .thenAcceptAsync(
-                      connectReply -> {
-                        if (!connectReply.ok()) {
-                          System.out.println("connect error: " + connectReply.error());
-                          error()
-                              .text("Error connecting: %s.", connectReply.error())
-                              .prefixed()
-                              .render(player::sendMessage);
-                        }
-                      });
             });
   }
 }

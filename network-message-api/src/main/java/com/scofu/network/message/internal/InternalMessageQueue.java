@@ -2,8 +2,6 @@ package com.scofu.network.message.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.scofu.common.json.DynamicReference.dynamic;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
@@ -13,7 +11,8 @@ import com.scofu.network.message.Dispatcher;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
 import com.scofu.network.message.NetworkMessageModule;
-import com.scofu.network.message.ReplyingQueueBuilder;
+import com.scofu.network.message.ReplyingQueue;
+import com.scofu.network.message.Result;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -52,29 +51,30 @@ final class InternalMessageQueue implements MessageQueue {
   }
 
   @Override
-  public <T> ReplyingQueueBuilder<T, Void> declareFor(TypeLiteral<T> type) {
+  public <T> ReplyingQueue<T, Void> declareFor(TypeLiteral<T> type) {
     checkNotNull(type, "type");
-    return new InternalQueueBuilder<>(
-        Queue.of(type, Types.voidTypeLiteral(), "global"), this::declareFor);
+    return new InternalQueue<>(
+        QueueKey.of(type, Types.voidTypeLiteral(), "global"), this::declareFor);
   }
 
   @Override
-  public <T> ReplyingQueueBuilder<T, Void> declareFor(Class<T> type) {
+  public <T> ReplyingQueue<T, Void> declareFor(Class<T> type) {
     checkNotNull(type, "type");
     return declareFor(TypeLiteral.get(type));
   }
 
-  private <T, R> CompletableFuture<R> declareFor(T t, Queue<T, R> queue) {
-    return supplyAsync(
+  private <T, R> Result<R> declareFor(T t, QueueKey<T, R> queueKey) {
+    return Result.of(
             () -> {
-              final var expectsReply = !void.class.isAssignableFrom(queue.replyType().getRawType());
+              final var expectsReply =
+                  !void.class.isAssignableFrom(queueKey.replyType().getRawType());
               if (expectsReply) {
-                return dispatchPayloadAsRequest(t, queue);
+                return dispatchPayloadAsRequest(t, queueKey);
               }
-              return dispatchPayloadAsFanout(t, queue);
+              return dispatchPayloadAsFanout(t, queueKey);
             },
             executorService)
-        .thenCompose(Function.identity());
+        .flatMap(Function.identity());
   }
 
   @Override
@@ -83,34 +83,33 @@ final class InternalMessageQueue implements MessageQueue {
     dispatcher.close();
   }
 
-  private <T, R> CompletableFuture<R> dispatchPayloadAsRequest(T t, Queue<T, R> queue) {
-    final var future = new CompletableFuture<R>().orTimeout(60, TimeUnit.SECONDS);
+  private <T, R> Result<R> dispatchPayloadAsRequest(T t, QueueKey<T, R> queueKey) {
+    final var future = new CompletableFuture<R>();
     final var requestId = pendingRequestStore.prepare(future);
-    final var payload = createPayload(t, queue, requestId);
+    final var payload = createPayload(t, queueKey, requestId);
     System.out.printf(
         "%ssent: %s%s%n", "\u001B[35m", json.toString(Payload.class, payload), "\u001B[0m");
     final var body = json.toBytes(Payload.class, payload);
-    dispatcher.dispatchRequest(queue.topic(), body);
-    if (future.isDone()) {
-      System.out.println("FUTURE WAS ALREADY COMPLETED LOL TOO FAST");
-      return completedFuture(future.join());
-    }
-    return future;
+    dispatcher.dispatchRequest(queueKey.topic(), body);
+    return Result.of(future)
+        .timeoutAfter(1, TimeUnit.MINUTES)
+        .onTimeout(() -> pendingRequestStore.invalidate(requestId));
   }
 
-  private <T, R> CompletableFuture<R> dispatchPayloadAsFanout(T t, Queue<T, R> queue) {
+  private <T, R> Result<R> dispatchPayloadAsFanout(T t, QueueKey<T, R> queueKey) {
     final var future = CompletableFuture.<R>completedFuture(null);
-    final var payload = createPayload(t, queue, null);
+    final var payload = createPayload(t, queueKey, null);
     System.out.printf(
         "%ssent: %s%s%n", "\u001B[35m", json.toString(Payload.class, payload), "\u001B[0m");
     final var body = json.toBytes(Payload.class, payload);
-    dispatcher.dispatchFanout(queue.topic(), body);
-    return future;
+    dispatcher.dispatchFanout(queueKey.topic(), body);
+    return Result.of(future);
   }
 
-  private <T, R> Payload createPayload(T t, Queue<T, R> queue, String requestId) {
-    final var dynamicMessage = dynamic(typeCache, queue.type(), t);
-    final var dynamicReply = requestId == null ? null : dynamic(typeCache, queue.replyType(), null);
+  private <T, R> Payload createPayload(T t, QueueKey<T, R> queueKey, String requestId) {
+    final var dynamicMessage = dynamic(typeCache, queueKey.type(), t);
+    final var dynamicReply =
+        requestId == null ? null : dynamic(typeCache, queueKey.replyType(), null);
     return Payload.of(requestId, dynamicMessage, dynamicReply);
   }
 }

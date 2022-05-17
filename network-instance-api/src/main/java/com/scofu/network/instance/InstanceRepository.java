@@ -13,7 +13,8 @@ import com.scofu.network.instance.api.InstanceDeployReply;
 import com.scofu.network.instance.api.InstanceDeployRequest;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
-import com.scofu.network.message.QueueBuilder;
+import com.scofu.network.message.Queue;
+import com.scofu.network.message.Result;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,9 +24,9 @@ import java.util.concurrent.CompletableFuture;
 public class InstanceRepository extends AbstractDocumentRepository<Instance> {
 
   private final MessageQueue messageQueue;
-  private final QueueBuilder<InstanceDeployRequest, InstanceDeployReply> deployQueue;
-  private final QueueBuilder<InstanceConnectRequest, InstanceConnectReply> connectQueue;
-  private QueueBuilder<InstanceAvailabilityRequest, InstanceAvailabilityReply> availabilityQueue;
+  private final Queue<InstanceDeployRequest, InstanceDeployReply> deployQueue;
+  private final Queue<InstanceConnectRequest, InstanceConnectReply> connectQueue;
+  private final Queue<InstanceAvailabilityRequest, InstanceAvailabilityReply> availabilityQueue;
 
   @Inject
   InstanceRepository(MessageQueue messageQueue, MessageFlow messageFlow, Json json) {
@@ -61,7 +62,7 @@ public class InstanceRepository extends AbstractDocumentRepository<Instance> {
    *
    * @param deployment the deployment
    */
-  public CompletableFuture<InstanceDeployReply> deploy(Deployment deployment) {
+  public Result<InstanceDeployReply> deploy(Deployment deployment) {
     return deployQueue.push(new InstanceDeployRequest(deployment));
   }
 
@@ -71,7 +72,7 @@ public class InstanceRepository extends AbstractDocumentRepository<Instance> {
    * @param deployment the deployment
    * @param context the context
    */
-  public CompletableFuture<InstanceAvailabilityReply> checkAvailability(
+  public Result<InstanceAvailabilityReply> checkAvailability(
       Deployment deployment, Map<String, Object> context) {
     return availabilityQueue.push(new InstanceAvailabilityRequest(deployment, context));
   }
@@ -82,7 +83,7 @@ public class InstanceRepository extends AbstractDocumentRepository<Instance> {
    * @param playerIds the player ids
    * @param instance the instance
    */
-  public CompletableFuture<InstanceConnectReply> connect(List<UUID> playerIds, Instance instance) {
+  public Result<InstanceConnectReply> connect(List<UUID> playerIds, Instance instance) {
     return connectQueue.push(new InstanceConnectRequest(playerIds, instance));
   }
 }

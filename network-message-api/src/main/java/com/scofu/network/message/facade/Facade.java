@@ -6,7 +6,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.internal.MoreTypes;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
-import com.scofu.network.message.QueueBuilder;
+import com.scofu.network.message.Queue;
+import com.scofu.network.message.Result;
 import com.scofu.network.message.facade.annotation.Subscribe;
 import com.scofu.network.message.facade.annotation.Topic;
 import java.lang.invoke.MethodHandles;
@@ -17,7 +18,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -48,7 +48,7 @@ public class Facade {
         registerSubscription(instance, method);
         continue;
       }
-      registserPublisher(publishingMethods, method);
+      registerPublisher(publishingMethods, method);
     }
     final var facade =
         type.cast(
@@ -88,8 +88,7 @@ public class Facade {
         };
     var topic =
         Optional.ofNullable(method.getAnnotation(Topic.class)).map(Topic::value).orElse(null);
-    if (CompletableFuture.class.isAssignableFrom(
-        MoreTypes.getRawType(method.getGenericReturnType()))) {
+    if (Result.class.isAssignableFrom(MoreTypes.getRawType(method.getGenericReturnType()))) {
       final var builder =
           messageFlow
               .subscribeTo(TypeLiteral.get(method.getGenericParameterTypes()[0]))
@@ -124,10 +123,9 @@ public class Facade {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private void registserPublisher(Map<String, Function> publishingMethods, Method method) {
-    QueueBuilder queue;
-    if (CompletableFuture.class.isAssignableFrom(
-        MoreTypes.getRawType(method.getGenericReturnType()))) {
+  private void registerPublisher(Map<String, Function> publishingMethods, Method method) {
+    Queue queue;
+    if (Result.class.isAssignableFrom(MoreTypes.getRawType(method.getGenericReturnType()))) {
       queue =
           messageQueue
               .declareFor(TypeLiteral.get(method.getGenericParameterTypes()[0]))

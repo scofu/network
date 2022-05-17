@@ -1,7 +1,5 @@
 package com.scofu.network.instance.bukkit;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
 import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.network.instance.Instance;
@@ -13,7 +11,8 @@ import com.scofu.network.instance.api.InstanceCreatedMessage;
 import com.scofu.network.instance.bukkit.event.AvailabilityCheckEvent;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
-import com.scofu.network.message.QueueBuilder;
+import com.scofu.network.message.Queue;
+import com.scofu.network.message.Result;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
 import javax.inject.Named;
@@ -22,7 +21,7 @@ import org.bukkit.plugin.Plugin;
 final class LocalInstanceAnnouncer implements Feature {
 
   private final Plugin plugin;
-  private final QueueBuilder<InstanceCreatedMessage, Void> aliveQueue;
+  private final Queue<InstanceCreatedMessage, Void> aliveQueue;
   private final CompletableFuture<Instance> instanceFuture;
   private final InstanceRepository instanceRepository;
   private final LocalInstanceProvider instanceProvider;
@@ -58,8 +57,8 @@ final class LocalInstanceAnnouncer implements Feature {
     System.out.println("getting instance");
     systemRepository
         .get()
-        .thenComposeAsync(system -> instanceProvider.get())
-        .thenAcceptAsync(
+        .flatMap(system -> instanceProvider.get())
+        .accept(
             instance -> {
               instanceFuture.complete(instance);
               aliveQueue.push(new InstanceCreatedMessage(instance));
@@ -71,15 +70,15 @@ final class LocalInstanceAnnouncer implements Feature {
     instanceRepository.delete(localHost.getHostName());
   }
 
-  private CompletableFuture<InstanceAvailabilityReply> onInstanceAvailabilityRequest(
+  private Result<InstanceAvailabilityReply> onInstanceAvailabilityRequest(
       InstanceAvailabilityRequest request) {
     final var event = new AvailabilityCheckEvent(request.context());
     plugin.getServer().getPluginManager().callEvent(event);
     if (event.isCancelled()) {
-      return completedFuture(null);
+      return Result.empty();
     }
     return instanceProvider
         .get()
-        .thenApplyAsync(instance -> new InstanceAvailabilityReply(true, null, instance));
+        .map(instance -> new InstanceAvailabilityReply(true, null, instance));
   }
 }

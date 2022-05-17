@@ -26,7 +26,7 @@ public interface MessageQueue extends Closeable {
    * @param type the type of the message
    * @param <T> the type of the message
    */
-  <T> ReplyingQueueBuilder<T, Void> declareFor(TypeLiteral<T> type);
+  <T> ReplyingQueue<T, Void> declareFor(TypeLiteral<T> type);
 
   /**
    * Sets the type of the message.
@@ -34,5 +34,5 @@ public interface MessageQueue extends Closeable {
    * @param type the type of the message
    * @param <T> the type of the message
    */
-  <T> ReplyingQueueBuilder<T, Void> declareFor(Class<T> type);
+  <T> ReplyingQueue<T, Void> declareFor(Class<T> type);
 }

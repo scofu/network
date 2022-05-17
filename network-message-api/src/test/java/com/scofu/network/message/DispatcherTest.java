@@ -29,13 +29,13 @@ public class DispatcherTest extends Service {
     messageFlow
         .subscribeTo(Ping.class)
         .replyWith(Ping.class)
-        .via(CompletableFuture::completedFuture);
+        .via(Result::of);
     final var pong =
         messageQueue
             .declareFor(Ping.class)
             .expectReply(Ping.class)
             .push(new Ping(System.nanoTime(), "hi"))
-            .thenApply(ping -> new Ping(System.nanoTime() - ping.ns(), "hello"))
+            .map(ping -> new Ping(System.nanoTime() - ping.ns(), "hello"))
             .join();
     assertNotNull(pong);
     assertEquals("hello", pong.tag());

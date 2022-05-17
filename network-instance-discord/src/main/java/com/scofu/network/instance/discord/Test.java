@@ -9,6 +9,7 @@ import com.scofu.network.document.Query;
 import com.scofu.network.instance.Deployment;
 import com.scofu.network.instance.Network;
 import com.scofu.network.instance.NetworkRepository;
+import com.scofu.network.message.Result;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
@@ -22,7 +23,9 @@ import discord4j.core.object.presence.Status;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.MessageCreateSpec;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
 import net.renfei.cloudflare.Cloudflare;
 import reactor.core.publisher.Mono;
 
@@ -49,36 +52,34 @@ final class Test implements Feature {
         .updatePresence(ClientPresence.of(Status.ONLINE, ClientActivity.watching("www.scofu.com")))
         .block();
     System.out.println("yo!");
-
-    networkRepository.delete("test").join();
-    networkRepository.delete("build").join();
-
-    final var networks = networkRepository.find(Query.empty()).thenApply(Map::values).join();
-
-    if (networks.isEmpty()) {
-      final var deployment =
-          lazyFactory.create(
-              Deployment.class,
-              Map.of(
-                  Deployment::id,
-                  "build",
-                  Deployment::image,
-                  "docker.scofu.com/bukkit-build:latest",
-                  Deployment::name,
-                  "build",
-                  Deployment::environment,
-                  Map.of()));
-
-      networkRepository
-          .update(
-              lazyFactory.create(
-                  Network.class,
-                  Network::id,
-                  "build",
-                  Network::deployments,
-                  Map.of(new PeriodEscapedString("build.scofu.com"), deployment)))
-          .join();
-    }
+    Stream.of("test", "build")
+        .map(networkRepository::delete)
+        .collect(Result.toResult())
+        .flatMap(unused -> networkRepository.find(Query.empty()))
+        .map(Map::values)
+        .filter(Collection::isEmpty)
+        .flatMap(
+            networks -> {
+              final var deployment =
+                  lazyFactory.create(
+                      Deployment.class,
+                      Map.of(
+                          Deployment::id,
+                          "build",
+                          Deployment::image,
+                          "docker.scofu.com/bukkit-build:latest",
+                          Deployment::name,
+                          "build",
+                          Deployment::environment,
+                          Map.of()));
+              return networkRepository.update(
+                  lazyFactory.create(
+                      Network.class,
+                      Network::id,
+                      "build",
+                      Network::deployments,
+                      Map.of(new PeriodEscapedString("build.scofu.com"), deployment)));
+            });
 
     final var guildId = Snowflake.of("905343563930427472");
     final var channelId = Snowflake.of("905351244204367894");
@@ -118,7 +119,7 @@ final class Test implements Feature {
                 });
 
     final var sendNetworks =
-        Mono.fromFuture(networkRepository.find(Query.empty()))
+        Mono.fromFuture(networkRepository.find(Query.empty()).unbox())
             .flatMap(
                 networks ->
                     client

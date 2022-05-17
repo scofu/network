@@ -7,9 +7,9 @@ import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.network.instance.Deployment;
 import com.scofu.network.instance.Instance;
 import com.scofu.network.instance.InstanceRepository;
+import com.scofu.network.message.Result;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.concurrent.CompletableFuture;
 
 /** Local instance provider. */
 public class LocalInstanceProvider {
@@ -32,28 +32,23 @@ public class LocalInstanceProvider {
   }
 
   /** Returns the instance. */
-  public CompletableFuture<Instance> get() {
+  public Result<Instance> get() {
     return instanceRepository
         .byIdAsync(localHost.getHostName())
-        .thenComposeAsync(
-            optional ->
-                optional
-                    .map(CompletableFuture::completedFuture)
-                    .orElseGet(
-                        () -> {
-                          final var deployment =
-                              json.fromString(
-                                  Deployment.class, System.getenv("INSTANCE_DEPLOYMENT"));
-                          final var instance =
-                              lazyFactory.create(
-                                  Instance.class,
-                                  Instance::id,
-                                  localHost.getHostName(),
-                                  Instance::deployment,
-                                  deployment,
-                                  Instance::address,
-                                  new InetSocketAddress(localHost, 25565));
-                          return instanceRepository.update(instance);
-                        }));
+        .flatMap(optional -> optional.map(Result::of).orElseGet(this::createAndUpdateInstance));
+  }
+
+  private Result<Instance> createAndUpdateInstance() {
+    final var deployment = json.fromString(Deployment.class, System.getenv("INSTANCE_DEPLOYMENT"));
+    final var instance =
+        lazyFactory.create(
+            Instance.class,
+            Instance::id,
+            localHost.getHostName(),
+            Instance::deployment,
+            deployment,
+            Instance::address,
+            new InetSocketAddress(localHost, 25565));
+    return instanceRepository.update(instance);
   }
 }

@@ -1,7 +1,5 @@
 package com.scofu.network.instance;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -19,8 +17,8 @@ import com.scofu.network.document.api.DocumentUpdateRequest;
 import com.scofu.network.document.api.DocumentUpdatedMessage;
 import com.scofu.network.message.MessageFlow;
 import com.scofu.network.message.MessageQueue;
+import com.scofu.network.message.Result;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 final class TestDocumentController implements Feature {
 
@@ -59,12 +57,11 @@ final class TestDocumentController implements Feature {
         .via(this::onDocumentDeleteRequest);
   }
 
-  private CompletableFuture<DocumentQueryReply> onDocumentQueryRequest(
-      DocumentQueryRequest request) {
+  private Result<DocumentQueryReply> onDocumentQueryRequest(DocumentQueryRequest request) {
     try {
       final var collection = database.get(request.collection());
       if (collection == null) {
-        return completedFuture(new DocumentQueryReply(true, null, Map.of()));
+        return Result.of(new DocumentQueryReply(true, null, Map.of()));
       }
       final var sorted = request.query().sort() != null;
       final var expectedSize = request.query().limit() > 0 ? request.query().limit() : 16;
@@ -73,24 +70,22 @@ final class TestDocumentController implements Feature {
               ? Maps.newLinkedHashMapWithExpectedSize(expectedSize)
               : Maps.newHashMapWithExpectedSize(expectedSize);
       reply.putAll(collection.documents);
-      return completedFuture(new DocumentQueryReply(true, null, reply));
+      return Result.of(new DocumentQueryReply(true, null, reply));
     } catch (Throwable throwable) {
       throwable.printStackTrace();
-      return completedFuture(new DocumentQueryReply(false, "Error", Map.of()));
+      return Result.of(new DocumentQueryReply(false, "Error", Map.of()));
     }
   }
 
-  private CompletableFuture<DocumentCountReply> onDocumentCountRequest(
-      DocumentCountRequest request) {
+  private Result<DocumentCountReply> onDocumentCountRequest(DocumentCountRequest request) {
     final var collection = database.get(request.collection());
     if (collection == null) {
-      return completedFuture(new DocumentCountReply(true, null, 0));
+      return Result.of(new DocumentCountReply(true, null, 0));
     }
-    return completedFuture(new DocumentCountReply(true, null, collection.documents().size()));
+    return Result.of(new DocumentCountReply(true, null, collection.documents().size()));
   }
 
-  private CompletableFuture<DocumentUpdateReply> onDocumentUpdateRequest(
-      DocumentUpdateRequest request) {
+  private Result<DocumentUpdateReply> onDocumentUpdateRequest(DocumentUpdateRequest request) {
     var collection = database.get(request.collection());
     if (collection == null) {
       collection = new Collection(Maps.newConcurrentMap());
@@ -104,21 +99,20 @@ final class TestDocumentController implements Feature {
         .declareFor(DocumentUpdatedMessage.class)
         .withTopic("scofu.document.updated." + request.collection())
         .push(new DocumentUpdatedMessage(request.collection(), request.json()));
-    return completedFuture(new DocumentUpdateReply(true, null));
+    return Result.of(new DocumentUpdateReply(true, null));
   }
 
-  private CompletableFuture<DocumentDeleteReply> onDocumentDeleteRequest(
-      DocumentDeleteRequest request) {
+  private Result<DocumentDeleteReply> onDocumentDeleteRequest(DocumentDeleteRequest request) {
     final var collection = database.get(request.collection());
     if (collection == null) {
-      return completedFuture(new DocumentDeleteReply(true, null));
+      return Result.of(new DocumentDeleteReply(true, null));
     }
     collection.documents.remove(request.id());
     messageQueue
         .declareFor(DocumentDeletedMessage.class)
         .withTopic("scofu.document.deleted." + request.collection())
         .push(new DocumentDeletedMessage(request.collection(), request.id()));
-    return completedFuture(new DocumentDeleteReply(true, null));
+    return Result.of(new DocumentDeleteReply(true, null));
   }
 
   private static class Collection {
