@@ -2,6 +2,7 @@ package com.scofu.network.instance.bungee;
 
 import static com.scofu.network.instance.bungee.BungeeComponents.fromAdventure;
 import static com.scofu.text.ContextualizedComponent.error;
+import static com.scofu.text.ContextualizedComponent.info;
 
 import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
@@ -82,17 +83,11 @@ public final class NetworkListener implements Listener, Feature {
 
     final var player = event.getPlayer();
     final var virtualHost = player.getPendingConnection().getVirtualHost();
-
     final var deployment = finalEndpointResolver.resolveDeployment(virtualHost).join().orElse(null);
-
     if (deployment == null) {
-      event
-          .getPlayer()
-          .disconnect(
-              fromAdventure(
-                  error()
-                      .text("Couldn't resolve endpoint %s.", virtualHost.getHostString())
-                      .render()));
+      player.disconnect(
+          fromAdventure(
+              error().text("Couldn't resolve endpoint %s.", virtualHost.getHostString()).render()));
       event.setCancelled(true);
       return;
     }
@@ -106,11 +101,9 @@ public final class NetworkListener implements Listener, Feature {
     final var availabilityReply =
         instanceRepository.checkAvailability(deployment, Map.of("slots", 1)).join();
     if (!availabilityReply.ok()) {
-      event
-          .getPlayer()
-          .disconnect(
-              fromAdventure(
-                  error().text("Availability error: %s", virtualHost.getHostString()).render()));
+      player.disconnect(
+          fromAdventure(
+              error().text("Availability error: %s", virtualHost.getHostString()).render()));
       event.setCancelled(true);
       return;
     }
@@ -120,7 +113,21 @@ public final class NetworkListener implements Listener, Feature {
       return;
     }
 
-    event.setTarget(proxyServer.getServerInfo(availabilityReply.instance().id()));
+    final var serverInfo = proxyServer.getServerInfo(availabilityReply.instance().id());
+    if (serverInfo == null) {
+      player.sendMessage(
+          fromAdventure(
+              error()
+                  .text(
+                      "Found available instance (%s) but it wasn't registered.",
+                      availabilityReply.instance().id())
+                  .prefixed()
+                  .render()));
+      sendPlayerThroughGatewayForDeployment(event, deployment);
+      return;
+    }
+
+    event.setTarget(serverInfo);
   }
 
   /**
@@ -151,6 +158,9 @@ public final class NetworkListener implements Listener, Feature {
   private void sendPlayerThroughGatewayForDeployment(
       ServerConnectEvent event, Deployment deployment) {
     event.setTarget(proxyServer.getServerInfo("gateway"));
+    event
+        .getPlayer()
+        .sendMessage(fromAdventure(info().text("Deploying instance...").prefixed().render()));
     instanceRepository
         .deploy(deployment)
         .accept(
