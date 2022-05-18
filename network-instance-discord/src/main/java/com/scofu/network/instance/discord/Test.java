@@ -101,7 +101,7 @@ final class Test implements Feature {
                   lazyFactory.create(
                       Network.class,
                       Network::id,
-                      "testing",
+                      "Staging",
                       Network::deployments,
                       Map.of(
                           new PeriodEscapedString("build.scofu.com"),
@@ -143,10 +143,7 @@ final class Test implements Feature {
             .content("Showing %s network%s:".formatted(size, size == 1 ? "" : " "));
     for (var network : networks) {
       final var embedBuilder =
-          EmbedCreateSpec.builder()
-              .title(network.id())
-              .description("...")
-              .addField("Deployments", "-", false);
+          EmbedCreateSpec.builder().title(network.id()).description("Deployments:");
       network
           .deployments()
           .forEach(
@@ -154,8 +151,8 @@ final class Test implements Feature {
                   embedBuilder.addField(Periods.unescape(id.toString()), deployment.image(), true));
       builder.addEmbed(embedBuilder.build());
     }
-    final var createButton = Button.primary("network-create", "Skapa ett nätverk");
-    final var deleteButton = Button.primary("network-delete", "Ta bort ett nätverk");
+    final var createButton = Button.primary("network-create", "Create a network");
+    final var deleteButton = Button.primary("network-delete", "Delete a network");
     return channelMono.flatMap(
         channel ->
             channel.createMessage(
