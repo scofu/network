@@ -85,6 +85,18 @@ final class Test implements Feature {
                           "lobby",
                           Deployment::environment,
                           Map.of()));
+              final var gameTestDeployment =
+                  lazyFactory.create(
+                      Deployment.class,
+                      Map.of(
+                          Deployment::id,
+                          "game-test",
+                          Deployment::image,
+                          "docker.scofu.com/game-test:latest",
+                          Deployment::name,
+                          "game-test",
+                          Deployment::environment,
+                          Map.of()));
               return networkRepository.update(
                   lazyFactory.create(
                       Network.class,
@@ -95,7 +107,9 @@ final class Test implements Feature {
                           new PeriodEscapedString("build.scofu.com"),
                           buildDeployment,
                           new PeriodEscapedString("scofu.com"),
-                          lobbyDeployment)));
+                          lobbyDeployment,
+                          new PeriodEscapedString("gt.scofu.com"),
+                          gameTestDeployment)));
             })
         .accept(
             unused -> {
