@@ -1,5 +1,7 @@
 package com.scofu.network.instance.discord;
 
+import static com.scofu.network.message.Result.toResult;
+
 import com.google.inject.Inject;
 import com.scofu.common.inject.Feature;
 import com.scofu.common.json.PeriodEscapedString;
@@ -9,7 +11,6 @@ import com.scofu.network.document.Query;
 import com.scofu.network.instance.Deployment;
 import com.scofu.network.instance.Network;
 import com.scofu.network.instance.NetworkRepository;
-import com.scofu.network.message.Result;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
@@ -53,12 +54,11 @@ final class Test implements Feature {
         .updatePresence(ClientPresence.of(Status.ONLINE, ClientActivity.watching("www.scofu.com")))
         .block();
     System.out.println("yo!");
-    Stream.of("test", "build", "testing")
-        .map(networkRepository::delete)
-        .collect(Result.toResult())
-        .flatMap(unused -> networkRepository.find(Query.empty()))
-        .map(Map::values)
-        .filter(Collection::isEmpty)
+    networkRepository
+        .find(Query.empty())
+        .map(map -> map.keySet().stream())
+        .apply(Stream::map, networkRepository::delete)
+        .flatMap(stream -> stream.collect(toResult()))
         .flatMap(
             networks -> {
               final var buildDeployment =
