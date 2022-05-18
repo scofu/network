@@ -12,7 +12,6 @@ import com.scofu.text.Color;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 final class NetworkBasedEndpointResolver implements EndpointResolver {
@@ -30,21 +29,23 @@ final class NetworkBasedEndpointResolver implements EndpointResolver {
   @Override
   public Result<Optional<Deployment>> resolveDeployment(InetSocketAddress address) {
     final var domain = address.getHostString().replaceFirst("mc\\.", "");
+    final var escapedDomain = new PeriodEscapedString(domain);
     return networkRepository
         .findByDomain(domain)
-        .map(
-            o -> o.map(network -> network.deployments().get(new PeriodEscapedString(domain))));
+        .apply(Optional::map, (Network network) -> network.deployments().get(escapedDomain));
   }
 
   @Override
   public Result<Optional<Motd>> resolveMotd(InetSocketAddress address) {
     final var domain = address.getHostString().replaceFirst("mc\\.", "");
-    return networkRepository.findByDomain(domain).map(o -> o.map(this::createMotd));
+    return networkRepository
+        .findByDomain(domain)
+        .apply(Optional::map, (Network network) -> createMotd(network, domain));
   }
 
-  private Motd createMotd(Network network) {
-    final var top = text("Scofu :^)").color(Color.BRIGHT_GREEN);
-    final var bottom = entry("network: %s", network.id());
+  private Motd createMotd(Network network, String domain) {
+    final var top = entry("Scofu | %s", network.id());
+    final var bottom = text(domain).color(Color.BRIGHT_BLACK);
     return lazyFactory.create(
         Motd.class,
         Motd::top,
