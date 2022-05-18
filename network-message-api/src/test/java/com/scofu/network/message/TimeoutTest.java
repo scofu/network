@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -79,7 +78,7 @@ public class TimeoutTest extends Service {
       final var result3 = Result.of(CompletableFuture.completedFuture("hi"), pool);
 
       Result.all(List.of(result, result2, result3), pool)
-          .apply(Stream::map, () -> (Function<String, String>) String::toUpperCase)
+          .apply(Stream::map, (String string) -> string.toUpperCase())
           .apply(Stream::collect, () -> Collectors.joining(", "))
           .timeoutAfter(10, TimeUnit.SECONDS, () -> "timed out")
           .onTimeout(() -> System.out.println("actually timed out :o"))
