@@ -337,6 +337,52 @@ public class Result<T> {
   }
 
   /**
+   * Applies the given function with the given argument to the result.
+   *
+   * @param function the function
+   * @param argument the argument
+   * @param <X> the type of the unboxed value of T
+   * @param <Y> the type of the unboxed value of R
+   * @param <R> the type of the new result
+   */
+  public <X, Y, R> Result<R> apply(
+      BiFunction<T, Function<X, Y>, R> function, Function<X, Y> argument) {
+    return map(thing -> function.apply(thing, argument));
+  }
+
+  //  /**
+  //   * Applies the given function with the given argument itself then the result.
+  //   *
+  //   * @param function the function
+  //   * @param argument the argument
+  //   * @param <A> the type of the first argument
+  //   * @param <B> the type of the second argument
+  //   * @param <R> the type of the new result
+  //   */
+  //  public <A, B, R> Result<R> apply(
+  //      BiFunction<T, Function<A, B>, R> function, Function<A, B> argument) {
+  //    return map(thing -> function.apply(thing, argument));
+  //  }
+
+  //  /**
+  //   * Applies the given function with the given target with the given second argument applied to
+  // the
+  //   * target and then to itself.
+  //   *
+  //   * @param function the function
+  //   * @param target the target
+  //   * @param y the second argument to the target
+  //   * @param <X> the type of the unboxed value in T {@code T<X>}
+  //   * @param <Y> the type of the second argument to the target
+  //   * @param <Z> the type of the unboxed value in R {@code R<Z>}
+  //   * @param <R> the type of the result
+  //   */
+  //  public <X, Y, Z, R> Result<R> apply(
+  //      BiFunction<T, Function<X, Z>, R> function, BiFunction<X, Y, Z> target, Y y) {
+  //    return map(thing -> function.apply(thing, x -> target.apply(x, y)));
+  //  }
+
+  /**
    * Returns a filtered result.
    *
    * @param predicate the predicate
