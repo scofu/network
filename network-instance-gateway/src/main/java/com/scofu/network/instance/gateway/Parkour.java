@@ -1,7 +1,7 @@
 package com.scofu.network.instance.gateway;
 
+import static com.scofu.text.ContextualizedComponent.success;
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.translatable;
 
 import com.scofu.text.Color;
 import java.time.Duration;
@@ -28,10 +28,10 @@ import net.minestom.server.particle.ParticleCreator;
 
 final class Parkour {
 
-  private static final Material[] MATERIALS = Material.values()
-      .stream()
-      .filter(material -> isColoredMaterialName(material.name().toLowerCase()))
-      .toArray(Material[]::new);
+  private static final Material[] MATERIALS =
+      Material.values().stream()
+          .filter(material -> isColoredMaterialName(material.name().toLowerCase()))
+          .toArray(Material[]::new);
   private final Player player;
   private final Random random;
   private Point previousPoint;
@@ -48,12 +48,16 @@ final class Parkour {
   }
 
   private static boolean isColoredMaterialName(String name) {
-    if (name.contains("white") || name.contains("light_gray") || name.contains("gray")
+    if (name.contains("white")
+        || name.contains("light_gray")
+        || name.contains("gray")
         || name.contains("black")) {
       return false;
     }
-    return name.contains("concrete") || name.contains("wool") || name.contains("terracotta") || (
-        name.contains("stained") && !name.contains("pane"));
+    return name.contains("concrete")
+        || name.contains("wool")
+        || name.contains("terracotta")
+        || (name.contains("stained") && !name.contains("pane"));
   }
 
   private static RgbColor colorByMaterialName(String name) {
@@ -107,8 +111,7 @@ final class Parkour {
       nextPoint = generateNext(new Pos(0, 60, 0));
       nextNextPoint = generateNext(nextPoint);
       if (level > 0) {
-        player.sendMessage(
-            translatable("You reached level %s!", text(level)).color(Color.WHITE));
+        success().text("You reached level %s!", level).prefixed().render(player::sendMessage);
       }
       level = 0;
       MinecraftServer.getSchedulerManager()
@@ -126,12 +129,20 @@ final class Parkour {
       nextNextPoint = generateNext(nextNextPoint);
       level++;
       player.clearTitle();
-      player.sendTitlePart(TitlePart.TIMES,
+      player.sendTitlePart(
+          TitlePart.TIMES,
           Title.Times.of(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(1)));
       player.sendActionBar(text(level).color(Color.BRIGHT_CYAN).decorate(TextDecoration.BOLD));
       sendBlockChanges(false);
-      player.playSound(Sound.sound(Key.key("minecraft", "item.armor.equip_gold"), Source.MASTER, 2f,
-          random.nextInt(10, 21) * 0.1f), nextNextPoint.x(), nextNextPoint.y(), nextNextPoint.z());
+      player.playSound(
+          Sound.sound(
+              Key.key("minecraft", "item.armor.equip_gold"),
+              Source.MASTER,
+              2f,
+              random.nextInt(10, 21) * 0.1f),
+          nextNextPoint.x(),
+          nextNextPoint.y(),
+          nextNextPoint.z());
     }
     return position;
   }
@@ -152,8 +163,9 @@ final class Parkour {
 
   private void sendBlockChanges(boolean includeInitialPoint) {
     if (includeInitialPoint) {
-      player.sendPacket(new BlockChangePacket(nextPoint,
-          MATERIALS[random.nextInt(MATERIALS.length)].block().stateId()));
+      player.sendPacket(
+          new BlockChangePacket(
+              nextPoint, MATERIALS[random.nextInt(MATERIALS.length)].block().stateId()));
     }
     final var material = MATERIALS[random.nextInt(MATERIALS.length)];
 
@@ -164,40 +176,65 @@ final class Parkour {
     meta.setInvisible(true);
     fallingBlock.setVelocity(new Vec(0, 20, 0));
     //    fallingBlock.addEffect(new Potion(PotionEffect.LEVITATION, (byte) 1, 60, false));
-    fallingBlock.setInstance(player.getInstance(),
+    fallingBlock.setInstance(
+        player.getInstance(),
         nextNextPoint.withX(x -> x + 0.5).withY(y -> y - 5).withZ(z -> z + 0.5));
     fallingBlock.spawn();
 
     final var point = nextNextPoint;
-    MinecraftServer.getSchedulerManager().buildTask(() -> {
-      fallingBlock.remove();
-      player.sendPacket(new BlockChangePacket(point, material.block().stateId()));
-    }).delay(Duration.ofMillis(250)).schedule();
+    MinecraftServer.getSchedulerManager()
+        .buildTask(
+            () -> {
+              fallingBlock.remove();
+              player.sendPacket(new BlockChangePacket(point, material.block().stateId()));
+            })
+        .delay(Duration.ofMillis(250))
+        .schedule();
 
-    player.sendPacket(ParticleCreator.createParticlePacket(Particle.DUST_COLOR_TRANSITION, false,
-        nextNextPoint.x() + 0.5, nextNextPoint.y() - 4.5, nextNextPoint.z() + 0.5, 0, 1.25f, 0, 0,
-        100, writer -> {
-          writer.writeFloat(0f);
-          writer.writeFloat(0f);
-          writer.writeFloat(0f);
-          writer.writeFloat(4);
-          final var color = colorByMaterialName(material.name().toLowerCase());
-          writer.writeFloat(color.red);
-          writer.writeFloat(color.green);
-          writer.writeFloat(color.blue);
-        }));
-    player.sendPacket(ParticleCreator.createParticlePacket(Particle.DUST_COLOR_TRANSITION, false,
-        nextNextPoint.x() + 0.5, nextNextPoint.y() - 0.5, nextNextPoint.z() + 0.5, 0, 0.125f, 0, 0,
-        10, writer -> {
-          writer.writeFloat(0f);
-          writer.writeFloat(0f);
-          writer.writeFloat(0f);
-          writer.writeFloat(4);
-          final var color = colorByMaterialName(material.name().toLowerCase());
-          writer.writeFloat(color.red);
-          writer.writeFloat(color.green);
-          writer.writeFloat(color.blue);
-        }));
+    player.sendPacket(
+        ParticleCreator.createParticlePacket(
+            Particle.DUST_COLOR_TRANSITION,
+            false,
+            nextNextPoint.x() + 0.5,
+            nextNextPoint.y() - 4.5,
+            nextNextPoint.z() + 0.5,
+            0,
+            1.25f,
+            0,
+            0,
+            100,
+            writer -> {
+              writer.writeFloat(0f);
+              writer.writeFloat(0f);
+              writer.writeFloat(0f);
+              writer.writeFloat(4);
+              final var color = colorByMaterialName(material.name().toLowerCase());
+              writer.writeFloat(color.red);
+              writer.writeFloat(color.green);
+              writer.writeFloat(color.blue);
+            }));
+    player.sendPacket(
+        ParticleCreator.createParticlePacket(
+            Particle.DUST_COLOR_TRANSITION,
+            false,
+            nextNextPoint.x() + 0.5,
+            nextNextPoint.y() - 0.5,
+            nextNextPoint.z() + 0.5,
+            0,
+            0.125f,
+            0,
+            0,
+            10,
+            writer -> {
+              writer.writeFloat(0f);
+              writer.writeFloat(0f);
+              writer.writeFloat(0f);
+              writer.writeFloat(4);
+              final var color = colorByMaterialName(material.name().toLowerCase());
+              writer.writeFloat(color.red);
+              writer.writeFloat(color.green);
+              writer.writeFloat(color.blue);
+            }));
   }
 
   private Point generateNext(Point point) {
