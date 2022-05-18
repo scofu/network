@@ -1,12 +1,10 @@
 package com.scofu.network.instance.gateway;
 
-import static net.kyori.adventure.text.Component.text;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Stage;
 import com.scofu.app.Service;
 import com.scofu.app.bootstrap.BootstrapModule;
-import com.scofu.text.Color;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -129,7 +127,6 @@ public class NetworkInstanceGateway extends Service {
           //      final var changeGameStatePacket = new ChangeGameStatePacket();
           //      changeGameStatePacket.reason = Reason.BEGIN_RAINING;
           //      event.getPlayer().sendPacket(changeGameStatePacket);
-          player.sendMessage(text("Loading server...").color(Color.WHITE));
           games.put(player.getUsername(), new Parkour(player, ThreadLocalRandom.current()));
           player.teleport(new Pos(0.5, 61, 0.5));
           player.setLevel(-999);
