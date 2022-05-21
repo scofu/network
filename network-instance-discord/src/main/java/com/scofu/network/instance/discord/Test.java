@@ -3,9 +3,9 @@ package com.scofu.network.instance.discord;
 import static com.scofu.network.message.Result.toResult;
 
 import com.google.inject.Inject;
+import com.scofu.common.PeriodEscapedString;
+import com.scofu.common.Periods;
 import com.scofu.common.inject.Feature;
-import com.scofu.common.json.PeriodEscapedString;
-import com.scofu.common.json.Periods;
 import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.network.document.Query;
 import com.scofu.network.instance.Deployment;

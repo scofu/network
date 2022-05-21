@@ -8,7 +8,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Stage;
 import com.scofu.app.Service;
 import com.scofu.app.bootstrap.BootstrapModule;
-import com.scofu.common.json.PeriodEscapedString;
+import com.scofu.common.PeriodEscapedString;
 import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.network.message.Dispatcher;
 import java.util.Map;

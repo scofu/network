@@ -6,9 +6,9 @@ import static com.scofu.network.document.Query.query;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
+import com.scofu.common.PeriodEscapedString;
+import com.scofu.common.Periods;
 import com.scofu.common.json.Json;
-import com.scofu.common.json.PeriodEscapedString;
-import com.scofu.common.json.Periods;
 import com.scofu.network.document.AbstractDocumentRepository;
 import com.scofu.network.document.RepositoryConfiguration;
 import com.scofu.network.message.MessageFlow;

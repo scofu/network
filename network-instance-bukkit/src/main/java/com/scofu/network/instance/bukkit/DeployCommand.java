@@ -4,9 +4,9 @@ import static com.scofu.text.ContextualizedComponent.error;
 import static com.scofu.text.ContextualizedComponent.info;
 
 import com.google.inject.Inject;
-import com.scofu.command.model.Expansion;
 import com.scofu.command.model.Identified;
 import com.scofu.command.validation.Permission;
+import com.scofu.common.Expansion;
 import com.scofu.common.inject.Feature;
 import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.network.instance.Deployment;

@@ -4,7 +4,7 @@ import static com.scofu.text.Components.centerWithSpaces;
 import static com.scofu.text.EntryComponent.entry;
 import static net.kyori.adventure.text.Component.text;
 
-import com.scofu.common.json.PeriodEscapedString;
+import com.scofu.common.PeriodEscapedString;
 import com.scofu.common.json.lazy.LazyFactory;
 import com.scofu.network.message.Result;
 import com.scofu.text.Characters;
