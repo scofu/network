@@ -53,7 +53,6 @@ final class InternalMessageFlow implements MessageFlow {
 
   @Override
   public CompletableFuture<byte[]> handleMessageOrRequest(byte... message) {
-    System.out.println("received bytes: " + message.length);
     checkNotNull(message, "message");
     final var payload = json.fromBytes(Payload.class, message);
     System.out.printf(
@@ -123,8 +122,6 @@ final class InternalMessageFlow implements MessageFlow {
     if (subscriptions == null || subscriptions.isEmpty()) {
       return completedFuture(null);
     }
-    System.out.println("1key = " + key);
-    System.out.println("1subscriptions = " + subscriptions.stream().toList());
     return supplyAsync(
         () -> {
           final var message = payload.message().value();
